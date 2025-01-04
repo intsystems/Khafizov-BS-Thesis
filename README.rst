@@ -23,7 +23,7 @@
 Abstract
 ========
 
-Purus sit amet luctus venenatis lectus magna fringilla. Condimentum id venenatis a condimentum vitae sapien. Auctor neque vitae tempus quam pellentesque nec nam aliquam. Eget egestas purus viverra accumsan in. Nam aliquam sem et tortor. Donec et odio pellentesque diam volutpat commodo. Odio pellentesque diam volutpat commodo sed egestas. Sit amet dictum sit amet justo. Pellentesque sit amet porttitor eget. Imperdiet sed euismod nisi porta lorem mollis aliquam ut. Quis varius quam quisque id diam vel quam elementum. Ornare lectus sit amet est placerat in. Vulputate dignissim suspendisse in est ante. Elit sed vulputate mi sit amet mauris. Egestas sed tempus urna et pharetra pharetra. Viverra tellus in hac habitasse platea dictumst vestibulum rhoncus.
+В данной работе рассматривается проблема распределённого обучения больших моделей (например, современных нейросетей), когда вычисления необходимо распараллеливать между несколькими устройствами. Основная сложность в таких системах заключается в высокой стоимости коммуникации при передаче больших объёмов градиентов. Мы предлагаем семейство операторов адаптивного сжатия, которые учитывают важность координат и тем самым снижают трафик, сохраняя качество сходимости. В экспериментальной части показано, что предлагаемые операторы могут работать не хуже классических вариантов RandK и TopK, а в ряде случаев достигают сопоставимого качества с TopK.
 
 Research publications
 ===============================
