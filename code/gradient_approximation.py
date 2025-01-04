@@ -3,6 +3,7 @@ from importlib import reload
 
 import utils
 from mirror_descent import MirrorDescentOnSimplex
+from projective_gradient_descent import GradientDescentOnCube
 reload(utils)
 
 def greedy_compress(g, indices):
@@ -27,29 +28,29 @@ def greedy_compress(g, indices):
 
 
 
-class MirrorDescentCompressor:
-    def __init__(self, grad, gamma, shape, use_ratio=0.1):
-        self.grad = grad
-        self.gamma = gamma
-        self.use_ratio = use_ratio
-        self.num_bits = int((use_ratio * 3 + 1) * shape) # approximate amount of bits
-        self.w = np.ones(shape=shape)
-        self.w /= np.linalg.norm(self.w, ord=1)
+# class MirrorDescentCompressor:
+#     def __init__(self, grad, gamma, shape, use_ratio=0.1):
+#         self.grad = grad
+#         self.gamma = gamma
+#         self.use_ratio = use_ratio
+#         self.num_bits = int((use_ratio * 3 + 1) * shape) # approximate amount of bits
+#         self.w = np.ones(shape=shape)
+#         self.w /= np.linalg.norm(self.w, ord=1)
     
-    def __call__(self, x):
-        x = np.copy(x)
+#     def __call__(self, x):
+#         x = np.copy(x)
 
-        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1.)
+#         MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1.)
 
-        MD.fit(x, max_iter=100)
-        self.w = MD.w
+#         MD.fit(x, max_iter=100)
+#         self.w = MD.w
         
-        g_k = self.grad(x)
-        indices = np.random.choice(len(self.w), size=int(len(self.w) * self.use_ratio), replace=False, p=self.w)
+#         g_k = self.grad(x)
+#         indices = np.random.choice(len(self.w), size=int(len(self.w) * self.use_ratio), replace=False, p=self.w)
         
-        result, self.num_bits = greedy_compress(g_k, indices)
+#         result, self.num_bits = greedy_compress(g_k, indices)
 
-        return result
+#         return result
 
 class MirrorDescentGreedyCompressor:
     def __init__(self, grad, gamma, shape, use_ratio=0.1):
@@ -58,18 +59,20 @@ class MirrorDescentGreedyCompressor:
         self.use_ratio = use_ratio
         self.num_bits = int((use_ratio * 3 + 1) * shape)
         self.w = np.ones(shape=shape)
-        self.w /= np.linalg.norm(self.w, ord=1)
     
     def __call__(self, x):
         x = np.copy(x)
 
-        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1.)
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1., R=d)
 
         MD.fit(x, max_iter=100)
         self.w = MD.w
         
         g_k = self.grad(x)
-        indices = np.argsort(-self.w)[:int(len(self.w) * self.use_ratio)]
+        indices = np.argsort(-self.w)[:k]
         
         result, self.num_bits = greedy_compress(g_k, indices)
 
@@ -83,22 +86,24 @@ class MirrorDescentGreedyWeightedCompressor:
         self.use_ratio = use_ratio
         self.num_bits = int((use_ratio * 3 + 1) * shape)
         self.w = np.ones(shape=shape)
-        self.w /= np.linalg.norm(self.w, ord=1)
     
     def __call__(self, x):
         x = np.copy(x)
 
-        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1.)
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1., R=d)
 
         MD.fit(x, max_iter=100)
         self.w = MD.w
         
         g_k = self.grad(x)
-        indices = np.argsort(-self.w)[:int(len(self.w) * self.use_ratio)]
+        indices = np.argsort(-self.w)[:k]
         
         weights = np.zeros_like(g_k)
         weights[indices] = self.w[indices]
-        weights *= len(self.w) * self.use_ratio / weights.sum()
+        weights *= k / weights.sum()
         
         result, self.num_bits = greedy_compress(weights * g_k, indices)
 
@@ -111,22 +116,24 @@ class MirrorDescentWeightedTopkCompressor:
         self.use_ratio = use_ratio
         self.num_bits = int((use_ratio * 3 + 1) * shape)
         self.w = np.ones(shape=shape)
-        self.w /= np.linalg.norm(self.w, ord=1)
     
     def __call__(self, x):
         x = np.copy(x)
 
-        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1.)
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        MD = MirrorDescentOnSimplex(self.w, self.grad, 0.1, gamma_0=self.gamma, gamma=1., R=d)
 
         MD.fit(x, max_iter=100)
         self.w = MD.w
         
         g_k = self.grad(x)
-        indices = np.argsort(-self.w * np.abs(g_k))[:int(len(self.w) * self.use_ratio)]
+        indices = np.argsort(-self.w * np.abs(g_k))[:k]
         
         weights = np.zeros_like(g_k)
         weights[indices] = self.w[indices]
-        weights *= len(self.w) * self.use_ratio / weights.sum()
+        weights *= k / weights.sum()
         
         result, self.num_bits = greedy_compress(weights * g_k, indices)
 
@@ -151,6 +158,90 @@ class SquareGradientCompressor:
         result, self.num_bits = greedy_compress(g_k, indices)
 
         return result
+    
+class GradientDescentGreedyCompressor:
+    def __init__(self, grad, gamma, shape, use_ratio=0.1):
+        self.grad = grad
+        self.gamma = gamma
+        self.use_ratio = use_ratio
+        self.num_bits = int((use_ratio * 3 + 1) * shape)
+        self.w = np.ones(shape=shape) / 2
+    
+    def __call__(self, x):
+        x = np.copy(x)
+
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        GD = GradientDescentOnCube(self.w, self.grad, gamma_0=self.gamma, gamma=1.)
+
+        GD.fit(x, max_iter=100)
+        self.w = GD.w
+        
+        g_k = self.grad(x)
+        indices = np.argsort(-self.w)[:k]
+        
+        result, self.num_bits = greedy_compress(g_k, indices)
+
+        return result
+
+class GradientDescentGreedyWeightedCompressor:
+    def __init__(self, grad, gamma, shape, use_ratio=0.1):
+        self.grad = grad
+        self.gamma = gamma
+        self.use_ratio = use_ratio
+        self.num_bits = int((use_ratio * 3 + 1) * shape)
+        self.w = np.ones(shape=shape) / 2
+    
+    def __call__(self, x):
+        x = np.copy(x)
+
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        GD = GradientDescentOnCube(self.w, self.grad, gamma_0=self.gamma, gamma=1.)
+
+        GD.fit(x, max_iter=100)
+        self.w = GD.w
+        
+        g_k = self.grad(x)
+        indices = np.argsort(-self.w)[:k]
+        
+        weights = np.zeros_like(g_k)
+        weights[indices] = self.w[indices]
+        
+        result, self.num_bits = greedy_compress(weights * g_k, indices)
+
+        return result
+    
+class GradientDescentWeightedTopkCompressor:
+    def __init__(self, grad, gamma, shape, use_ratio=0.1):
+        self.grad = grad
+        self.gamma = gamma
+        self.use_ratio = use_ratio
+        self.num_bits = int((use_ratio * 3 + 1) * shape)
+        self.w = np.ones(shape=shape) / 2
+    
+    def __call__(self, x):
+        x = np.copy(x)
+
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        GD = GradientDescentOnCube(self.w, self.grad, gamma_0=self.gamma, gamma=1.)
+
+        GD.fit(x, max_iter=100)
+        self.w = GD.w
+        
+        g_k = self.grad(x)
+        indices = np.argsort(-self.w * np.abs(g_k))[:k]
+        
+        weights = np.zeros_like(g_k)
+        weights[indices] = self.w[indices]
+        
+        result, self.num_bits = greedy_compress(weights * g_k, indices)
+
+        return result
 
 class GreedyCompressor:
     def __init__(self, grad, shape, use_ratio=0.1):
@@ -161,7 +252,10 @@ class GreedyCompressor:
     def __call__(self, x):
         g_k = self.grad(x)
 
-        indices = np.argsort(-np.abs(g_k))[:int(len(g_k) * self.use_ratio)]
+        k = int(len(x) * self.use_ratio)
+        d = len(x)
+
+        indices = np.argsort(-np.abs(g_k))[:k]
         result, self.num_bits = greedy_compress(g_k, indices)
 
         return result

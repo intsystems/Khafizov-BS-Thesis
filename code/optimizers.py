@@ -39,7 +39,7 @@ class GDOptimizer:
         self.name = "GD"
 
     def step(self, x, k):
-        gamma_k = self.learning_rate_k(k)
+        gamma_k = self.learning_rate_k
         nabla_f, num_bits = self.gradient_approximator.approx_gradient(x)
         x_next = x - gamma_k * nabla_f
 
