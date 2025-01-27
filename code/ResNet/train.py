@@ -1,14 +1,11 @@
-from math import ceil
 import torch
 from tqdm import tqdm, trange
-import matplotlib.pyplot as plt
-from descent import mirror_descent, gradient_descent
 
 def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, num_epochs, lr, eta, num_steps, device):
     train_log, train_acc_log = [], []
     val_log, val_acc_log = [], []
     for epoch in trange(num_epochs):
-        print('\nEpoch: %d' % epoch)
+        tqdm.write('\nEpoch: %d' % epoch)
         model.train()
         train_loss = 0
         correct = 0
@@ -42,7 +39,7 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
         train_log.append(train_loss)
         train_acc_log.append(train_accuracy)
         
-        print('Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)' % (train_loss, train_accuracy, correct, total))
+        tqdm.write('Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)' % (train_loss, train_accuracy, correct, total))
         
         # Validation
         model.eval()
@@ -65,6 +62,6 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
         val_log.append(val_loss)
         val_acc_log.append(val_accuracy)
         
-        print('Validation Loss: %.3f | Validation Acc: %.3f%% (%d/%d)' % (val_loss, val_accuracy, correct, total))
+        tqdm.write('\nValidation Loss: %.3f | Validation Acc: %.3f%% (%d/%d)' % (val_loss, val_accuracy, correct, total))
     
     return train_log, train_acc_log, val_log, val_acc_log

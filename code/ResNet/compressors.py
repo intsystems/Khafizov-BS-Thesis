@@ -114,7 +114,7 @@ class ImpK_b:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, mode=0):
+    def __init__(self, model, k, weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -128,7 +128,7 @@ class ImpK_b:
         self.w = {name: (imp := torch.ones_like(param)) / imp.sum()
             for name, param in model.named_parameters()
         }
-        self.mode = mode
+        self.weighted = weighted
 
     def update(self, X_train, y_train, criterion, lr, eta, num_steps):
         """
@@ -176,19 +176,20 @@ class ImpK_b:
         Returns:
             torch.Tensor: The compressed gradient tensor.
         Notes:
-            - If mode is 0, the compression is based on the top-k elements of the weight tensor.
-            - If mode is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
+            - If weighted is 0, the compression is based on the top-k elements of the weight tensor.
+            - If weighted is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
         """
         k = int(self.k * param.numel())
-        if self.mode == 0:
-            tensor = param.grad
-            topk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
-        elif self.mode == 1:
+        if self.weighted:
             tensor = param.grad * self.w[name] * (param.numel() / self.w[name].sum())
-            topk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
+            impk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
+        else:
+            tensor = param.grad
+            impk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
+
         
         mask = torch.zeros_like(tensor.flatten(), dtype=torch.bool)
-        mask[topk_indices] = True
+        mask[impk_indices] = True
         mask = mask.view(tensor.size())
         
         # Apply mask to tensor
@@ -215,7 +216,7 @@ class ImpK_c:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, mode=0):
+    def __init__(self, model, k, weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -229,7 +230,7 @@ class ImpK_c:
         self.w = {name: (imp := torch.ones_like(param)) / 2
             for name, param in model.named_parameters()
         }
-        self.mode = mode
+        self.weighted = weighted
 
     def update(self, X_train, y_train, criterion, lr, eta, num_steps):
         """
@@ -276,19 +277,19 @@ class ImpK_c:
         Returns:
             torch.Tensor: The compressed gradient tensor.
         Notes:
-            - If mode is 0, the compression is based on the top-k elements of the weight tensor.
-            - If mode is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
+            - If weighted is 0, the compression is based on the top-k elements of the weight tensor.
+            - If weighted is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
         """
         k = int(self.k * param.numel())
-        if self.mode == 0:
-            tensor = param.grad
-            topk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
-        elif self.mode == 1:
+        if self.weighted:
             tensor = param.grad * self.w[name]
-            topk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
+            impk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
+        else:
+            tensor = param.grad
+            impk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
         
         mask = torch.zeros_like(tensor.flatten(), dtype=torch.bool)
-        mask[topk_indices] = True
+        mask[impk_indices] = True
         mask = mask.view(tensor.size())
         
         # Apply mask to tensor

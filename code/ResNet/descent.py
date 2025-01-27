@@ -2,6 +2,24 @@ import torch
 from torch.func import functional_call
 
 def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, lambda_value, num_steps, criterion):
+    """
+    Perform mirror descent optimization on a specified parameter of a model.
+
+    Args:
+        model (torch.nn.Module): The neural network model.
+        X_train (torch.Tensor): The input training data.
+        y_train (torch.Tensor): The target training data.
+        param_name (str): The name of the parameter to be optimized.
+        impact (torch.Tensor): The initial impact tensor.
+        lr (float): Learning rate for the parameter update.
+        eta (float): Learning rate for the impact update.
+        lambda_value (float): Regularization parameter.
+        num_steps (int): Number of optimization steps.
+        criterion (callable): Loss function.
+
+    Returns:
+        torch.Tensor: The optimized impact tensor.
+    """
     impact = impact.clone().detach().requires_grad_(True)
     original_param = dict(model.named_parameters())[param_name]
 
@@ -34,6 +52,21 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
 
 
 def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion):
+    """
+    Performs gradient descent to optimize the impact tensor for a given model parameter.
+    Args:
+        model (torch.nn.Module): The neural network model.
+        X_train (torch.Tensor): The input training data.
+        y_train (torch.Tensor): The target training data.
+        param_name (str): The name of the parameter to be optimized.
+        impact (torch.Tensor): The initial impact tensor.
+        lr (float): The learning rate for parameter update.
+        eta (float): The learning rate for impact update.
+        num_steps (int): The number of gradient descent steps.
+        criterion (torch.nn.Module): The loss function.
+    Returns:
+        torch.Tensor: The optimized impact tensor.
+    """
     impact = impact.clone().detach().requires_grad_(True)
     original_param = dict(model.named_parameters())[param_name]
 
