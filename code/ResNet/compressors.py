@@ -259,7 +259,7 @@ class ImpK_c:
             self.w[name] = gradient_descent(
                 model=self.model,
                 param_name=name,
-                impact=self.w[name],
+                impact=None,
                 lr=lr,
                 eta=eta,
                 num_steps=num_steps,
