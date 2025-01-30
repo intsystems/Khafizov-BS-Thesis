@@ -17,7 +17,7 @@ if __name__ == "__main__":
     config = {
         'param_usage': 0.001,
         'num_restarts': 1,
-        'num_epochs': 1,
+        'num_epochs': 30,
     }
 
     compress_configs = [
