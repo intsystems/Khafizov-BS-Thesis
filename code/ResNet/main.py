@@ -68,11 +68,13 @@ if __name__ == "__main__":
 
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
+        start = '' if compress_config['start'] is None else f"_{compress_config['start']}"
+        name = compression_type + start
         lr = compress_config['lr']
         eta = compress_config['eta']
         num_steps = compress_config['num_steps']
 
-        train_log[compression_type], train_acc[compression_type], test_log[compression_type], test_acc[compression_type] = [], [], [], []
+        train_log[name], train_acc[name], test_log[name], test_acc[name] = [], [], [], []
         
         for num_restart in range(num_restarts):
             set_seed(52 + num_restart)
@@ -103,10 +105,10 @@ if __name__ == "__main__":
                 num_steps=num_steps,
                 device=device
             )
-            train_log[compression_type].append(train_loss)
-            train_acc[compression_type].append(train_accuracy)
-            test_log[compression_type].append(test_loss)
-            test_acc[compression_type].append(test_accuracy)
+            train_log[name].append(train_loss)
+            train_acc[name].append(train_accuracy)
+            test_log[name].append(test_loss)
+            test_acc[name].append(test_accuracy)
 
     print("Train Loss")
     print(train_log)
@@ -124,20 +126,22 @@ if __name__ == "__main__":
 
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
+        start = '' if compress_config['start'] is None else f"_{compress_config['start']}"
+        name = compression_type + start
 
-        train_loss = np.array(train_log[compression_type])
+        train_loss = np.array(train_log[name])
         train_loss_mean = np.mean(train_loss, axis=0)
         train_loss_std = np.std(train_loss, axis=0)
         
-        train_accuracy = np.array(train_acc[compression_type])
+        train_accuracy = np.array(train_acc[name])
         train_accuracy_mean = np.mean(train_accuracy, axis=0)
         train_accuracy_std = np.std(train_accuracy, axis=0)
         
-        test_loss = np.array(test_log[compression_type])
+        test_loss = np.array(test_log[name])
         test_loss_mean = np.mean(test_loss, axis=0)
         test_loss_std = np.std(test_loss, axis=0)
         
-        test_accuracy = np.array(test_acc[compression_type])
+        test_accuracy = np.array(test_acc[name])
         test_accuracy_mean = np.mean(test_accuracy, axis=0)
         test_accuracy_std = np.std(test_accuracy, axis=0)
         
