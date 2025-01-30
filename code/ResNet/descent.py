@@ -1,7 +1,7 @@
 import torch
 from torch.func import functional_call
 
-def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, lambda_value, num_steps, criterion):
+def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, lambda_value, num_steps, criterion, start=None):
     """
     Perform mirror descent optimization on a specified parameter of a model.
 
@@ -27,11 +27,16 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     loss = criterion(outputs, y_train)
     param_grad = torch.autograd.grad(loss, original_param, create_graph=True)[0]
     
-    if impact is None:
-        impact = param_grad.abs().clone().detach()
-        impact /= impact.sum()
+    if start == 'abs':
+        with torch.no_grad():
+            impact = param_grad.abs().clone().detach()
+            impact /= impact.sum()
+    elif start == 'uniform':
+        with torch.no_grad():
+            impact = torch.ones_like(param_grad)
+            impact /= impact.sum()
     
-    impact = impact.clone().detach().requires_grad_(True)
+    impact = impact.requires_grad_(True)
 
     new_params = {name: param.clone() for name, param in model.named_parameters()}
 
@@ -58,7 +63,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     return impact.detach()
 
 
-def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion):
+def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion, start=None):
     """
     Performs gradient descent to optimize the impact tensor for a given model parameter.
     Args:
@@ -80,10 +85,12 @@ def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, 
     loss = criterion(outputs, y_train)
     param_grad = torch.autograd.grad(loss, original_param, create_graph=True)[0]
 
-    if impact is None:
+    if start == 'topk':
         impact = torch.zeros_like(param_grad)
         topk_indices = torch.topk(param_grad.abs().view(-1), int(0.001 * param_grad.numel())).indices
         impact.view(-1)[topk_indices] = 1.0
+    elif start == 'ones':
+        impact = torch.ones_like(param_grad)
     
     impact = impact.clone().detach().requires_grad_(True)
     

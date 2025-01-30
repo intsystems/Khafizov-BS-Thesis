@@ -114,7 +114,7 @@ class ImpK_b:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, weighted=True):
+    def __init__(self, model, k, start='abs', weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -128,6 +128,7 @@ class ImpK_b:
         self.w = {name: (imp := torch.ones_like(param)) / imp.sum()
             for name, param in model.named_parameters()
         }
+        self.start = start
         self.weighted = weighted
 
     def update(self, X_train, y_train, criterion, lr, eta, num_steps):
@@ -157,14 +158,15 @@ class ImpK_b:
             self.w[name] = mirror_descent(
                 model=self.model,
                 param_name=name,
-                impact=None,
+                impact=self.w[name],
                 lr=lr,
                 eta=eta,
                 lambda_value=0.1,
                 num_steps=num_steps,
                 X_train=X_train,
                 y_train=y_train,
-                criterion=criterion
+                criterion=criterion,
+                start=self.start
             )
 
     def compress(self, name, param):
@@ -216,7 +218,7 @@ class ImpK_c:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, weighted=True):
+    def __init__(self, model, k, start='ones', weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -230,6 +232,7 @@ class ImpK_c:
         self.w = {name: (imp := torch.ones_like(param))
             for name, param in model.named_parameters()
         }
+        self.start = start
         self.weighted = weighted
 
     def update(self, X_train, y_train, criterion, lr, eta, num_steps):
@@ -259,13 +262,14 @@ class ImpK_c:
             self.w[name] = gradient_descent(
                 model=self.model,
                 param_name=name,
-                impact=None,
+                impact=self.w[name],
                 lr=lr,
                 eta=eta,
                 num_steps=num_steps,
                 X_train=X_train,
                 y_train=y_train,
-                criterion=criterion
+                criterion=criterion,
+                start=self.start
             )
 
     def compress(self, name, param):

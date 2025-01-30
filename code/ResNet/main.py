@@ -17,28 +17,45 @@ if __name__ == "__main__":
     config = {
         'param_usage': 0.001,
         'num_restarts': 1,
-        'num_epochs': 30,
+        'num_epochs': 1,
     }
 
     compress_configs = [
         {
             'compression_type': 'TopK',
+            'start': None,
             'lr': 0.01,
-            'eta': None,
-            'num_steps': None,
+            'eta': 0.1,
+            'num_steps': 20,
         },
         {
             'compression_type': 'ImpK_b',
+            'start': 'uniform',
             'lr': 0.01,
-            'eta': 5.,
+            'eta': 2.,
+            'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'abs',
+            'lr': 0.01,
+            'eta': 2.,
             'num_steps': 20,
         },
         {
             'compression_type': 'ImpK_c',
+            'start': 'ones',
             'lr': 0.01,
             'eta': 1000000.,
             'num_steps': 20,
-        }
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'topk',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'num_steps': 20,
+        },
     ]
 
 
@@ -66,9 +83,9 @@ if __name__ == "__main__":
             elif compression_type == 'RandK':
                 compressor = compressors.RandK(param_usage)
             elif compression_type == 'ImpK_b':
-                compressor = compressors.ImpK_b(net, param_usage)
+                compressor = compressors.ImpK_b(net, param_usage, start=compress_config['start'])
             elif compression_type == 'ImpK_c':
-                compressor = compressors.ImpK_c(net, param_usage)
+                compressor = compressors.ImpK_c(net, param_usage, start=compress_config['start'])
             
             optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
             criterion = nn.CrossEntropyLoss()
@@ -126,16 +143,16 @@ if __name__ == "__main__":
         
         iters = list(range(len(train_loss_mean)))
         
-        axs_train[0].plot(iters, train_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}')
+        axs_train[0].plot(iters, train_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
         axs_train[0].fill_between(iters, train_loss_mean - train_loss_std, train_loss_mean + train_loss_std, alpha=0.1)
         
-        axs_train[1].plot(iters, train_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}')
+        axs_train[1].plot(iters, train_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
         axs_train[1].fill_between(iters, train_accuracy_mean - train_accuracy_std, train_accuracy_mean + train_accuracy_std, alpha=0.1)
 
-        axs_test[0].plot(iters, test_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}')
+        axs_test[0].plot(iters, test_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
         axs_test[0].fill_between(iters, test_loss_mean - test_loss_std, test_loss_mean + test_loss_std, alpha=0.1)
         
-        axs_test[1].plot(iters, test_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}')
+        axs_test[1].plot(iters, test_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
         axs_test[1].fill_between(iters, test_accuracy_mean - test_accuracy_std, test_accuracy_mean + test_accuracy_std, alpha=0.1)
 
     axs_train[0].set_title(f"Comparison on Train, different compression types, param_usage={param_usage}")
