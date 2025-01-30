@@ -157,7 +157,7 @@ class ImpK_b:
             self.w[name] = mirror_descent(
                 model=self.model,
                 param_name=name,
-                impact=self.w[name],
+                impact=None,
                 lr=lr,
                 eta=eta,
                 lambda_value=0.1,
@@ -227,7 +227,7 @@ class ImpK_c:
         """
         self.model = model
         self.k = k
-        self.w = {name: (imp := torch.ones_like(param)) / 2
+        self.w = {name: (imp := torch.ones_like(param))
             for name, param in model.named_parameters()
         }
         self.weighted = weighted

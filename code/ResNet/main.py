@@ -14,11 +14,10 @@ if __name__ == "__main__":
     trainloader, testloader, classes = load_data()
     device = get_device()
 
-    num_epochs = 2
-
     config = {
         'param_usage': 0.001,
         'num_restarts': 1,
+        'num_epochs': 30,
     }
 
     compress_configs = [
@@ -31,13 +30,13 @@ if __name__ == "__main__":
         {
             'compression_type': 'ImpK_b',
             'lr': 0.01,
-            'eta': 2.,
+            'eta': 5.,
             'num_steps': 20,
         },
         {
             'compression_type': 'ImpK_c',
             'lr': 0.01,
-            'eta': 100000.,
+            'eta': 1000000.,
             'num_steps': 20,
         }
     ]
@@ -48,6 +47,7 @@ if __name__ == "__main__":
 
     param_usage = config['param_usage']
     num_restarts = config['num_restarts']
+    num_epochs = config['num_epochs']
 
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
@@ -90,6 +90,15 @@ if __name__ == "__main__":
             train_acc[compression_type].append(train_accuracy)
             test_log[compression_type].append(test_loss)
             test_acc[compression_type].append(test_accuracy)
+
+    print("Train Loss")
+    print(train_log)
+    print("Train Accuracy")
+    print(train_acc)
+    print("Test Loss")
+    print(test_log)
+    print("Test Accuracy")
+    print(test_acc)
 
 
     fig_train, axs_train = plt.subplots(1, 2, figsize=(16, 7))

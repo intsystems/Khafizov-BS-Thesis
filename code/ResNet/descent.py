@@ -20,12 +20,18 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     Returns:
         torch.Tensor: The optimized impact tensor.
     """
-    impact = impact.clone().detach().requires_grad_(True)
+
     original_param = dict(model.named_parameters())[param_name]
 
     outputs = model(X_train)
     loss = criterion(outputs, y_train)
     param_grad = torch.autograd.grad(loss, original_param, create_graph=True)[0]
+    
+    if impact is None:
+        impact = param_grad.abs().clone().detach().requires_grad_(True)
+    else:
+        impact = impact.clone().detach().requires_grad_(True)
+
     new_params = {name: param.clone() for name, param in model.named_parameters()}
 
     for _ in range(num_steps):
