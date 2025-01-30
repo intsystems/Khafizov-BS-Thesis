@@ -31,8 +31,6 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-            
-            tqdm.write(f'Batch {batch_idx+1}/{len(train_dataset)} - Loss: {loss.item():.3f}, Acc: {100. * correct / total:.3f}%')
 
         train_loss /= len(train_dataset)
         train_accuracy = 100. * correct / total
