@@ -17,7 +17,7 @@ if __name__ == "__main__":
     config = {
         'param_usage': 0.001,
         'num_restarts': 1,
-        'num_epochs': 1,
+        'num_epochs': 30,
     }
 
     compress_configs = [
@@ -25,44 +25,52 @@ if __name__ == "__main__":
             'compression_type': 'TopK',
             'lr': 0.01,
         },
-        # {
-        #     'compression_type': 'ImpK_b',
-        #     'start': 'ones',
-        #     'lr': 0.01,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
-        # {
-        #     'compression_type': 'ImpK_b',
-        #     'start': 'abs',
-        #     'lr': 0.01,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
-        # {
-        #     'compression_type': 'ImpK_c',
-        #     'start': 'ones',
-        #     'lr': 0.01,
-        #     'eta': 1000000.,
-        #     'scale': 1.0,
-        #     'num_steps': 20,
-        # },
-        # {
-        #     'compression_type': 'ImpK_c',
-        #     'start': 'ones',
-        #     'lr': 0.01,
-        #     'eta': 1000000.,
-        #     'num_steps': 20,
-        #     'scale': 10.0,
-        # },
-        # {
-        #     'compression_type': 'ImpK_c',
-        #     'start': 'topk',
-        #     'lr': 0.01,
-        #     'eta': 1000000.,
-        #     'num_steps': 20,
-        #     'scale': 1.0,
-        # },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 2.,
+            'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'abs',
+            'lr': 0.01,
+            'eta': 2.,
+            'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'scale': 1.0,
+            'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'num_steps': 20,
+            'scale': 10.0,
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'topk',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'num_steps': 20,
+            'scale': 1.0,
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'center',
+            'lr': 0.02,
+            'eta': 1000000.,
+            'num_steps': 20,
+            'scale': 1.0,
+        },
     ]
 
 
@@ -76,7 +84,8 @@ if __name__ == "__main__":
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
         start = '' if compress_config.get('start', None) is None else f"{compress_config['start']}"
-        name = f'{compression_type}_{start}{'' if 'scale' not in compress_config else f"_{compress_config["scale"]}"}'
+        scale = compress_config.get('scale', '')
+        name = f'{compression_type}_{start}_{scale}' if scale else f'{compression_type}_{start}'
         lr = compress_config.get('lr', None)
         eta = compress_config.get('eta', None)
         num_steps = compress_config.get('num_steps', None)
@@ -143,7 +152,8 @@ if __name__ == "__main__":
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
         start = '' if compress_config.get('start', None) is None else f"{compress_config['start']}"
-        name = f'{compression_type}_{start}{'' if 'scale' not in compress_config else f"_{compress_config["scale"]}"}'
+        scale = compress_config.get('scale', '')
+        name = f'{compression_type}_{start}_{scale}' if scale else f'{compression_type}_{start}'
 
         train_loss = np.array(train_log[name])
         train_loss_mean = np.mean(train_loss, axis=0)

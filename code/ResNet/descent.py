@@ -90,6 +90,9 @@ def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, 
         impact.view(-1)[topk_indices] = 1.0
     elif start == 'ones':
         impact = torch.ones_like(param_grad)
+    elif start == 'center':
+        impact = torch.ones_like(param_grad) / 2
+
     
     impact = impact.clone().detach().requires_grad_(True)
     
