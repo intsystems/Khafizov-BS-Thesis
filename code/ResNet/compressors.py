@@ -130,7 +130,7 @@ class ImpK_b:
         """
         self.model = model
         self.k = k
-        self.w = {name: (imp := torch.ones_like(param)) / imp.sum()
+        self.w = {name: (imp := torch.ones_like(param))
             for name, param in model.named_parameters()
         }
         self.start = start
@@ -191,7 +191,7 @@ class ImpK_b:
         """
         k = int(self.k * param.numel())
         if self.weighted:
-            tensor = param.grad * self.w[name] * (param.numel() / self.w[name].sum())
+            tensor = param.grad * self.w[name]
             impk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
         else:
             tensor = param.grad
@@ -229,7 +229,7 @@ class ImpK_c:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, start='ones', weighted=True):
+    def __init__(self, model, k, start='ones', scale=1.0, weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -245,6 +245,7 @@ class ImpK_c:
             for name, param in model.named_parameters()
         }
         self.start = start
+        self.scale = scale
         self.weighted = weighted
 
     def update(self, X_train, y_train, criterion, lr, eta, num_steps):
@@ -281,7 +282,8 @@ class ImpK_c:
                 X_train=X_train,
                 y_train=y_train,
                 criterion=criterion,
-                start=self.start
+                start=self.start,
+                scale=self.scale
             )
 
     def compress(self, name, param):

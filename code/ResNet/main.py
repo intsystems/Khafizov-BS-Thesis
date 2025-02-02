@@ -22,15 +22,12 @@ if __name__ == "__main__":
 
     compress_configs = [
         {
-            'compression_type': 'TopK',
-            'start': None,
+            'compression_type': 'TopK',\
             'lr': 0.01,
-            'eta': 0.1,
-            'num_steps': 20,
         },
         {
             'compression_type': 'ImpK_b',
-            'start': 'uniform',
+            'start': 'ones',
             'lr': 0.01,
             'eta': 2.,
             'num_steps': 20,
@@ -47,7 +44,16 @@ if __name__ == "__main__":
             'start': 'ones',
             'lr': 0.01,
             'eta': 1000000.,
+            'scale': 1.0,
             'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_c',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'num_steps': 20,
+            'scale': 10.0,
         },
         {
             'compression_type': 'ImpK_c',
@@ -55,6 +61,7 @@ if __name__ == "__main__":
             'lr': 0.01,
             'eta': 1000000.,
             'num_steps': 20,
+            'scale': 1.0,
         },
     ]
 
@@ -87,7 +94,7 @@ if __name__ == "__main__":
             elif compression_type == 'ImpK_b':
                 compressor = compressors.ImpK_b(net, param_usage, start=compress_config['start'])
             elif compression_type == 'ImpK_c':
-                compressor = compressors.ImpK_c(net, param_usage, start=compress_config['start'])
+                compressor = compressors.ImpK_c(net, param_usage, start=compress_config['start'], scale=compress_config['scale'])
             
             optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
             criterion = nn.CrossEntropyLoss()

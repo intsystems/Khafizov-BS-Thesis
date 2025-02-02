@@ -30,11 +30,10 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     if start == 'abs':
         with torch.no_grad():
             impact = param_grad.abs().clone().detach()
-            impact /= impact.sum()
-    elif start == 'uniform':
+            impact *= param_grad.numel() / impact.sum()
+    elif start == 'ones':
         with torch.no_grad():
             impact = torch.ones_like(param_grad)
-            impact /= impact.sum()
     
     impact = impact.requires_grad_(True)
 
@@ -55,7 +54,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
 
         with torch.no_grad():
             impact_update = torch.pow(impact, 1/(1+eta*lambda_value)) * torch.exp(-(eta/(1+eta*lambda_value)) * (grad_impact))
-            impact = impact_update / impact_update.sum()
+            impact = impact_update * impact.numel() / impact_update.sum()
 
         # Ensure impact requires grad for the next iteration
         impact.requires_grad_(True)
@@ -63,7 +62,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     return impact.detach()
 
 
-def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion, start=None):
+def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion, start=None, scale=1.0):
     """
     Performs gradient descent to optimize the impact tensor for a given model parameter.
     Args:
@@ -111,7 +110,7 @@ def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, 
 
         with torch.no_grad():
             impact -= eta * lr * grad_impact
-            impact = torch.clip(impact, 0, 1)
+            impact = torch.clip(impact, 0, scale)
         
         # Ensure impact requires grad for the next iteration
         impact.requires_grad_(True)
