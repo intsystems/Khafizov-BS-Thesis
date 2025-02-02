@@ -97,6 +97,7 @@ class RandK:
 class ImpK_b:
     """
     A class used to perform importance-based compression on model parameters.
+    
     Attributes
     ----------
     model : torch.nn.Module
@@ -105,8 +106,11 @@ class ImpK_b:
         The fraction of parameters to retain after compression.
     w : dict
         A dictionary containing the importance weights for each parameter in the model.
-    mode : int, optional
-        The mode of compression (default is 0).
+    start : str
+        The initialization method for the importance weights.
+    weighted : bool
+        Whether to use weighted compression.
+    
     Methods
     -------
     update(X_train, y_train, criterion, lr, eta, num_steps)
@@ -120,8 +124,9 @@ class ImpK_b:
 
         Args:
             model (torch.nn.Module): The neural network model to be compressed.
-            k (int): The compression factor.
-            mode (int, optional): The mode of compression. Defaults to 0.
+            k (float): The compression factor.
+            start (str): The initialization method for the importance weights.
+            weighted (bool): Whether to use weighted compression.
         """
         self.model = model
         self.k = k
@@ -172,14 +177,17 @@ class ImpK_b:
     def compress(self, name, param):
         """
         Compresses the gradient tensor of a parameter based on the specified mode and weight.
+        
         Args:
             name (str): The name of the parameter.
             param (torch.nn.Parameter): The parameter whose gradient tensor is to be compressed.
+        
         Returns:
             torch.Tensor: The compressed gradient tensor.
+        
         Notes:
-            - If weighted is 0, the compression is based on the top-k elements of the weight tensor.
-            - If weighted is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
+            - If weighted is False, the compression is based on the top-k elements of the weight tensor.
+            - If weighted is True, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
         """
         k = int(self.k * param.numel())
         if self.weighted:
@@ -189,7 +197,6 @@ class ImpK_b:
             tensor = param.grad
             impk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
 
-        
         mask = torch.zeros_like(tensor.flatten(), dtype=torch.bool)
         mask[impk_indices] = True
         mask = mask.view(tensor.size())
@@ -201,6 +208,7 @@ class ImpK_b:
 class ImpK_c:
     """
     A class used to perform importance-based compression on model parameters.
+    
     Attributes
     ----------
     model : torch.nn.Module
@@ -209,8 +217,11 @@ class ImpK_c:
         The fraction of parameters to retain after compression.
     w : dict
         A dictionary containing the importance weights for each parameter in the model.
-    mode : int, optional
-        The mode of compression (default is 0).
+    start : str
+        The initialization method for the importance weights.
+    weighted : bool
+        Whether to use weighted compression.
+    
     Methods
     -------
     update(X_train, y_train, criterion, lr, eta, num_steps)
@@ -224,8 +235,9 @@ class ImpK_c:
 
         Args:
             model (torch.nn.Module): The neural network model to be compressed.
-            k (int): The compression factor.
-            mode (int, optional): The mode of compression. Defaults to 0.
+            k (float): The compression factor.
+            start (str): The initialization method for the importance weights.
+            weighted (bool): Whether to use weighted compression.
         """
         self.model = model
         self.k = k
@@ -275,14 +287,17 @@ class ImpK_c:
     def compress(self, name, param):
         """
         Compresses the gradient tensor of a parameter based on the specified mode and weight.
+        
         Args:
             name (str): The name of the parameter.
             param (torch.nn.Parameter): The parameter whose gradient tensor is to be compressed.
+        
         Returns:
             torch.Tensor: The compressed gradient tensor.
+        
         Notes:
-            - If weighted is 0, the compression is based on the top-k elements of the weight tensor.
-            - If weighted is 1, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
+            - If weighted is False, the compression is based on the top-k elements of the weight tensor.
+            - If weighted is True, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
         """
         k = int(self.k * param.numel())
         if self.weighted:

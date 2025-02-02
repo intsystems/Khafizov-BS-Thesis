@@ -1,17 +1,18 @@
 import torch
 from tqdm import tqdm, trange
 
-def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, num_epochs, lr, eta, num_steps, device):
+def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, num_epochs, lr, eta, num_steps, device, quiet=False):
     train_log, train_acc_log = [], []
     val_log, val_acc_log = [], []
     for epoch in trange(num_epochs):
-        tqdm.write('\nEpoch: %d' % epoch)
+        if not quiet:
+            tqdm.write('\nEpoch: %d' % epoch)
         model.train()
         train_loss = 0
         correct = 0
         total = 0
               
-        for batch_idx, (inputs, targets) in enumerate(tqdm(train_dataset, desc="Training", leave=False)):
+        for batch_idx, (inputs, targets) in enumerate(train_dataset):
             inputs, targets = inputs.to(device), targets.to(device)
 
             if batch_idx == 0:
@@ -37,7 +38,8 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
         train_log.append(train_loss)
         train_acc_log.append(train_accuracy)
         
-        tqdm.write('Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)' % (train_loss, train_accuracy, correct, total))
+        if not quiet:
+            tqdm.write('Train Loss: %.3f | Train Acc: %.3f%% (%d/%d)' % (train_loss, train_accuracy, correct, total))
         
         # Validation
         model.eval()
@@ -59,7 +61,7 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
         val_accuracy = 100. * correct / total
         val_log.append(val_loss)
         val_acc_log.append(val_accuracy)
-        
-        tqdm.write('\nValidation Loss: %.3f | Validation Acc: %.3f%% (%d/%d)' % (val_loss, val_accuracy, correct, total))
+        if not quiet:
+            tqdm.write('\nValidation Loss: %.3f | Validation Acc: %.3f%% (%d/%d)' % (val_loss, val_accuracy, correct, total))
     
     return train_log, train_acc_log, val_log, val_acc_log

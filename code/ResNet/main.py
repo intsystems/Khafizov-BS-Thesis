@@ -28,20 +28,20 @@ if __name__ == "__main__":
             'eta': 0.1,
             'num_steps': 20,
         },
-        # {
-        #     'compression_type': 'ImpK_b',
-        #     'start': 'uniform',
-        #     'lr': 0.01,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
-        # {
-        #     'compression_type': 'ImpK_b',
-        #     'start': 'abs',
-        #     'lr': 0.01,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'uniform',
+            'lr': 0.01,
+            'eta': 2.,
+            'num_steps': 20,
+        },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'abs',
+            'lr': 0.01,
+            'eta': 2.,
+            'num_steps': 20,
+        },
         {
             'compression_type': 'ImpK_c',
             'start': 'ones',
@@ -105,6 +105,15 @@ if __name__ == "__main__":
                 num_steps=num_steps,
                 device=device
             )
+            print(f"Compression type: {compression_type}, start: {compress_config['start']}, num_restart: {num_restart}, lr: {lr}, eta: {eta}, num_steps: {num_steps}")
+            print("Train Loss")
+            print(train_loss)
+            print("Train Accuracy")
+            print(train_accuracy)
+            print("Test Loss")
+            print(test_loss)
+            print("Test Accuracy")
+            print(test_accuracy)
             train_log[name].append(train_loss)
             train_acc[name].append(train_accuracy)
             test_log[name].append(test_loss)
