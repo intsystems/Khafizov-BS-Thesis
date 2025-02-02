@@ -17,52 +17,52 @@ if __name__ == "__main__":
     config = {
         'param_usage': 0.001,
         'num_restarts': 1,
-        'num_epochs': 30,
+        'num_epochs': 1,
     }
 
     compress_configs = [
         {
-            'compression_type': 'TopK',\
+            'compression_type': 'TopK',
             'lr': 0.01,
         },
-        {
-            'compression_type': 'ImpK_b',
-            'start': 'ones',
-            'lr': 0.01,
-            'eta': 2.,
-            'num_steps': 20,
-        },
-        {
-            'compression_type': 'ImpK_b',
-            'start': 'abs',
-            'lr': 0.01,
-            'eta': 2.,
-            'num_steps': 20,
-        },
-        {
-            'compression_type': 'ImpK_c',
-            'start': 'ones',
-            'lr': 0.01,
-            'eta': 1000000.,
-            'scale': 1.0,
-            'num_steps': 20,
-        },
-        {
-            'compression_type': 'ImpK_c',
-            'start': 'ones',
-            'lr': 0.01,
-            'eta': 1000000.,
-            'num_steps': 20,
-            'scale': 10.0,
-        },
-        {
-            'compression_type': 'ImpK_c',
-            'start': 'topk',
-            'lr': 0.01,
-            'eta': 1000000.,
-            'num_steps': 20,
-            'scale': 1.0,
-        },
+        # {
+        #     'compression_type': 'ImpK_b',
+        #     'start': 'ones',
+        #     'lr': 0.01,
+        #     'eta': 2.,
+        #     'num_steps': 20,
+        # },
+        # {
+        #     'compression_type': 'ImpK_b',
+        #     'start': 'abs',
+        #     'lr': 0.01,
+        #     'eta': 2.,
+        #     'num_steps': 20,
+        # },
+        # {
+        #     'compression_type': 'ImpK_c',
+        #     'start': 'ones',
+        #     'lr': 0.01,
+        #     'eta': 1000000.,
+        #     'scale': 1.0,
+        #     'num_steps': 20,
+        # },
+        # {
+        #     'compression_type': 'ImpK_c',
+        #     'start': 'ones',
+        #     'lr': 0.01,
+        #     'eta': 1000000.,
+        #     'num_steps': 20,
+        #     'scale': 10.0,
+        # },
+        # {
+        #     'compression_type': 'ImpK_c',
+        #     'start': 'topk',
+        #     'lr': 0.01,
+        #     'eta': 1000000.,
+        #     'num_steps': 20,
+        #     'scale': 1.0,
+        # },
     ]
 
 
@@ -75,11 +75,11 @@ if __name__ == "__main__":
 
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
-        start = '' if compress_config['start'] is None else f"_{compress_config['start']}"
-        name = compression_type + start
-        lr = compress_config['lr']
-        eta = compress_config['eta']
-        num_steps = compress_config['num_steps']
+        start = '' if compress_config.get('start', None) is None else f"{compress_config['start']}"
+        name = f'{compression_type}_{start}{'' if 'scale' not in compress_config else f"_{compress_config["scale"]}"}'
+        lr = compress_config.get('lr', None)
+        eta = compress_config.get('eta', None)
+        num_steps = compress_config.get('num_steps', None)
 
         train_log[name], train_acc[name], test_log[name], test_acc[name] = [], [], [], []
         
@@ -112,7 +112,7 @@ if __name__ == "__main__":
                 num_steps=num_steps,
                 device=device
             )
-            print(f"Compression type: {compression_type}, start: {compress_config['start']}, num_restart: {num_restart}, lr: {lr}, eta: {eta}, num_steps: {num_steps}")
+            print(f"Compression type: {compression_type}, start: {start}, num_restart: {num_restart}, lr: {lr}, eta: {eta}, num_steps: {num_steps}")
             print("Train Loss")
             print(train_loss)
             print("Train Accuracy")
@@ -142,8 +142,8 @@ if __name__ == "__main__":
 
     for compress_config in compress_configs:
         compression_type = compress_config['compression_type']
-        start = '' if compress_config['start'] is None else f"_{compress_config['start']}"
-        name = compression_type + start
+        start = '' if compress_config.get('start', None) is None else f"{compress_config['start']}"
+        name = f'{compression_type}_{start}{'' if 'scale' not in compress_config else f"_{compress_config["scale"]}"}'
 
         train_loss = np.array(train_log[name])
         train_loss_mean = np.mean(train_loss, axis=0)
@@ -163,16 +163,16 @@ if __name__ == "__main__":
         
         iters = list(range(len(train_loss_mean)))
         
-        axs_train[0].plot(iters, train_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
+        axs_train[0].plot(iters, train_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={start}')
         axs_train[0].fill_between(iters, train_loss_mean - train_loss_std, train_loss_mean + train_loss_std, alpha=0.1)
         
-        axs_train[1].plot(iters, train_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
+        axs_train[1].plot(iters, train_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={start}')
         axs_train[1].fill_between(iters, train_accuracy_mean - train_accuracy_std, train_accuracy_mean + train_accuracy_std, alpha=0.1)
 
-        axs_test[0].plot(iters, test_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
+        axs_test[0].plot(iters, test_loss_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={start}')
         axs_test[0].fill_between(iters, test_loss_mean - test_loss_std, test_loss_mean + test_loss_std, alpha=0.1)
         
-        axs_test[1].plot(iters, test_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={compress_config["start"]}')
+        axs_test[1].plot(iters, test_accuracy_mean, label=f'{compression_type}, lr={compress_config["lr"]}, start={start}')
         axs_test[1].fill_between(iters, test_accuracy_mean - test_accuracy_std, test_accuracy_mean + test_accuracy_std, alpha=0.1)
 
     axs_train[0].set_title(f"Comparison on Train, different compression types, param_usage={param_usage}")
