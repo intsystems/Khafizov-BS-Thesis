@@ -47,7 +47,7 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
         correct = 0
         total = 0
         with torch.no_grad():
-            for inputs, targets in tqdm(val_dataset, desc="Validation", leave=False):
+            for inputs, targets in val_dataset:
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
