@@ -15,9 +15,11 @@ class TopK:
     """
     def __init__(self, k):
         """
-        Initializes the compressor with a given parameter.
+        Initializes the compressor with the given parameters.
+        
         Args:
             k (int): The parameter to initialize the compressor with.
+            model (torch.nn.Module): The neural network model whose parameters are to be compressed.
         """
         self.k = k
     
@@ -44,6 +46,54 @@ class TopK:
         compressed_tensor = tensor * mask
         compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
         return compressed_tensor
+
+class TopK_EF21:
+    """
+    A class used to compress gradients by selecting the top-k values and using Error Feedback 21.
+    Attributes
+    ----------
+    k : int
+        The number of top values to select.
+    Methods
+    -------
+    compress(name, param)
+        Compresses the gradient of the given parameter by selecting the top-k values with EF21.
+    """
+    def __init__(self, k, model):
+        """
+        Initializes the compressor with a given parameter.
+        Args:
+            k (int): The parameter to initialize the compressor with.
+        """
+        self.k = k
+        self.g = {name: torch.zeros_like(param) for name, param in model.named_parameters() if param.requires_grad}
+    
+    def update(self, *args, **kwargs):
+        """
+        Placeholder for the update method.
+        """
+        pass
+
+    def compress(self, name, param):
+        """
+        Compresses the gradient tensor by retaining only the top-k absolute values.
+        Args:
+            name (str): The name of the parameter (not used in the current implementation).
+            param (torch.nn.Parameter): The parameter whose gradient tensor is to be compressed.
+        Returns:
+            torch.Tensor: The compressed gradient tensor with only the top-k absolute values retained.
+        """
+        # compression of difference
+        k = int(self.k * param.numel())
+        tensor = (param.grad - self.g[name]).view(-1)  # Flatten the tensor to a vector
+        topk_values, topk_indices = tensor.abs().topk(k)
+        mask = torch.zeros_like(tensor, dtype=torch.bool)
+        mask.scatter_(0, topk_indices, True)
+        compressed_tensor = tensor * mask
+        compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
+        # update g
+        self.g[name] += compressed_tensor
+        return self.g[name]
 
 
 class RandK:

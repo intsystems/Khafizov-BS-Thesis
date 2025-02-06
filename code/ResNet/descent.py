@@ -25,24 +25,23 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
 
     outputs = model(X_train)
     loss = criterion(outputs, y_train)
-    param_grad = torch.autograd.grad(loss, original_param, create_graph=True)[0]
+    param_grad = torch.autograd.grad(loss, original_param, retain_graph=True, create_graph=False)[0]
     
     if start == 'abs':
         with torch.no_grad():
-            impact = param_grad.abs().clone().detach()
+            impact = param_grad.abs().detach()
             impact *= param_grad.numel() / impact.sum()
     elif start == 'ones':
         with torch.no_grad():
             impact = torch.ones_like(param_grad)
     
-    impact = impact.requires_grad_(True)
+    impact = impact.detach().requires_grad_(True)
 
-    new_params = {name: param.clone() for name, param in model.named_parameters()}
+    new_params = {param_name: original_param.clone()}
 
     for _ in range(num_steps):
         # Update parameter using impact
-        param_new = original_param - lr * impact * param_grad
-        # Create new parameter dictionary
+        param_new = original_param - lr * impact * param_grad.detach()
         new_params[param_name] = param_new
         # Compute outputs with new parameters
         outputs_new = functional_call(model, new_params, (X_train,))
@@ -53,7 +52,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
         grad_impact = torch.autograd.grad(loss_new, impact)[0]
 
         with torch.no_grad():
-            impact_update = torch.pow(impact, 1/(1+eta*lambda_value)) * torch.exp(-(eta/(1+eta*lambda_value)) * (grad_impact))
+            impact_update = torch.pow(impact, 1/(1+eta*lambda_value)).detach() * torch.exp(-(eta/(1+eta*lambda_value)) * (grad_impact))
             impact = impact_update * impact.numel() / impact_update.sum()
 
         # Ensure impact requires grad for the next iteration
@@ -82,18 +81,17 @@ def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, 
 
     outputs = model(X_train)
     loss = criterion(outputs, y_train)
-    param_grad = torch.autograd.grad(loss, original_param, create_graph=True)[0]
+    param_grad = torch.autograd.grad(loss, original_param, retain_graph=True, create_graph=True)[0]
 
     if start == 'topk':
-        impact = torch.zeros_like(param_grad)
+        impact = torch.zeros_like(param_grad).detach()
         topk_indices = torch.topk(param_grad.abs().view(-1), int(0.001 * param_grad.numel())).indices
         impact.view(-1)[topk_indices] = 1.0
     elif start == 'ones':
         impact = torch.ones_like(param_grad)
     elif start == 'center':
-        impact = torch.ones_like(param_grad) / 2
+        impact = (torch.ones_like(param_grad) / 2)
 
-    
     impact = impact.clone().detach().requires_grad_(True)
     
     new_params = {name: param.clone() for name, param in model.named_parameters()}
@@ -112,7 +110,7 @@ def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, 
         grad_impact = torch.autograd.grad(loss_new, impact)[0]
 
         with torch.no_grad():
-            impact -= eta * lr * grad_impact
+            impact = impact.detach() - eta * lr * grad_impact.detach()
             impact = torch.clip(impact, 0, scale)
         
         # Ensure impact requires grad for the next iteration
