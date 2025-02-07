@@ -15,9 +15,9 @@ if __name__ == "__main__":
     device = get_device()
 
     config = {
-        'param_usage': 0.1,
+        'param_usage': 0.001,
         'num_restarts': 1,
-        'num_epochs': 10,
+        'num_epochs': 1,
     }
 
     compress_configs = [
@@ -39,15 +39,15 @@ if __name__ == "__main__":
         # },
         # {
         #     'compression_type': 'TopK_EF21',
-        #     'lr': 0.0001,
+        #     'lr': 0.001,
         # },
-        # {
-        #     'compression_type': 'ImpK_b',
-        #     'start': 'ones',
-        #     'lr': 0.01,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
+        {
+            'compression_type': 'ImpK_b',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 2.,
+            'num_steps': 20,
+        },
         # {
         #     'compression_type': 'ImpK_b',
         #     'start': 'ones',
@@ -79,7 +79,14 @@ if __name__ == "__main__":
         # {
         #     'compression_type': 'ImpK_c',
         #     'start': 'ones',
-        #     'lr': 0.01,
+        #     'lr': 0.015,
+        #     'eta': 1000000.,
+        #     'num_steps': 20,
+        # },
+        # {
+        #     'compression_type': 'ImpK_c',
+        #     'start': 'ones',
+        #     'lr': 0.02,
         #     'eta': 1000000.,
         #     'num_steps': 20,
         # },
@@ -131,6 +138,8 @@ if __name__ == "__main__":
                 compressor = compressors.RandK(param_usage)
             elif compression_type == 'ImpK_b':
                 compressor = compressors.ImpK_b(net, param_usage, start=start)
+            elif compression_type == 'ImpK_b_EF21':
+                compressor = compressors.ImpK_b_EF21(net, param_usage, start=start)
             elif compression_type == 'ImpK_c':
                 compressor = compressors.ImpK_c(net, param_usage, start=start)
             
@@ -173,6 +182,23 @@ if __name__ == "__main__":
     print("Test Accuracy")
     print(test_acc)
 
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+
+    date = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = os.path.join(log_dir, f"training_log_{date}.txt")
+
+    with open(log_file, 'w') as f:
+        f.write("Train Loss\n")
+        f.write(str(train_log) + "\n")
+        f.write("Train Accuracy\n")
+        f.write(str(train_acc) + "\n")
+        f.write("Test Loss\n")
+        f.write(str(test_log) + "\n")
+        f.write("Test Accuracy\n")
+        f.write(str(test_acc) + "\n")
 
     fig_train, axs_train = plt.subplots(1, 2, figsize=(16, 7))
     fig_test, axs_test = plt.subplots(1, 2, figsize=(16, 7))

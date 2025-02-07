@@ -255,6 +255,121 @@ class ImpK_b:
         compressed_tensor = tensor * mask
         return compressed_tensor
 
+class ImpK_b_EF21:
+    """
+    A class used to perform importance-based compression on model parameters.
+    
+    Attributes
+    ----------
+    model : torch.nn.Module
+        The neural network model whose parameters are to be compressed.
+    k : float
+        The fraction of parameters to retain after compression.
+    w : dict
+        A dictionary containing the importance weights for each parameter in the model.
+    start : str
+        The initialization method for the importance weights.
+    weighted : bool
+        Whether to use weighted compression.
+    
+    Methods
+    -------
+    update(X_train, y_train, criterion, lr, eta, num_steps)
+        Updates the importance weights using mirror descent.
+    compress(name, param)
+        Compresses the given parameter tensor based on the importance weights.
+    """
+    def __init__(self, model, k, start='abs', weighted=True):
+        """
+        Initializes the compressor with the given model, compression factor, and mode.
+
+        Args:
+            model (torch.nn.Module): The neural network model to be compressed.
+            k (float): The compression factor.
+            start (str): The initialization method for the importance weights.
+            weighted (bool): Whether to use weighted compression.
+        """
+        self.model = model
+        self.k = k
+        self.w = {name: (imp := torch.ones_like(param))
+            for name, param in model.named_parameters()
+        }
+        self.g = {name: torch.zeros_like(param) for name, param in model.named_parameters()}
+        self.start = start
+        self.weighted = weighted
+
+    def update(self, X_train, y_train, criterion, lr, eta, num_steps):
+        """
+        Update the model parameters using mirror descent optimization on a simplex.
+
+        Parameters:
+        -----------
+        X_train : torch.Tensor
+            The input training data.
+        y_train : torch.Tensor
+            The target training labels.
+        criterion : torch.nn.Module
+            The loss function used to evaluate the model.
+        lr : float
+            The learning rate for the optimization.
+        eta : float
+            The step size parameter for mirror descent.
+        num_steps : int
+            The number of steps to perform in the mirror descent optimization.
+
+        Returns:
+        --------
+        None
+        """
+        for name, param in self.model.named_parameters():
+            self.w[name] = mirror_descent(
+                model=self.model,
+                param_name=name,
+                impact=self.w[name],
+                lr=lr,
+                eta=eta,
+                lambda_value=0.1,
+                num_steps=num_steps,
+                X_train=X_train,
+                y_train=y_train,
+                criterion=criterion,
+                start=self.start,
+                g=self.g[name]
+            )
+
+    def compress(self, name, param):
+        """
+        Compresses the gradient tensor of a parameter based on the specified mode and weight.
+        
+        Args:
+            name (str): The name of the parameter.
+            param (torch.nn.Parameter): The parameter whose gradient tensor is to be compressed.
+        
+        Returns:
+            torch.Tensor: The compressed gradient tensor.
+        
+        Notes:
+            - If weighted is False, the compression is based on the top-k elements of the weight tensor.
+            - If weighted is True, the compression is based on the top-k elements of the element-wise product of the gradient tensor and the weight tensor.
+        """
+        k = int(self.k * param.numel())
+        if self.weighted:
+            tensor = (param.grad - self.g[name]) * self.w[name]
+            impk_indices = torch.argsort(tensor.abs().flatten(), descending=True)[:k]
+        else:
+            tensor = param.grad - self.g[name]
+            impk_indices = torch.argsort(self.w[name].flatten(), descending=True)[:k]
+
+        mask = torch.zeros_like(tensor.flatten(), dtype=torch.bool)
+        mask[impk_indices] = True
+        mask = mask.view(tensor.size())
+        
+        # Apply mask to tensor
+        compressed_tensor = tensor * mask
+        # update g
+        self.g[name] += compressed_tensor
+        return self.g[name]
+
 class ImpK_c:
     """
     A class used to perform importance-based compression on model parameters.
