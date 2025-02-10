@@ -1,25 +1,7 @@
 import torch
 from torch.func import functional_call
 
-def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_value, num_steps, criterion, start=None, g=None):
-    """
-    Perform mirror descent optimization on a specified parameter of a model.
-
-    Args:
-        model (torch.nn.Module): The neural network model.
-        X_train (torch.Tensor): The input training data.
-        y_train (torch.Tensor): The target training data.
-        param_name (str): The name of the parameter to be optimized.
-        impact (torch.Tensor): The initial impact tensor.
-        lr (float): Learning rate for the parameter update.
-        eta (float): Learning rate for the impact update.
-        lambda_value (float): Regularization parameter.
-        num_steps (int): Number of optimization steps.
-        criterion (callable): Loss function.
-
-    Returns:
-        torch.Tensor: The optimized impact tensor.
-    """
+def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_value, num_steps, criterion, start=None):
 
     original_param = dict(model.named_parameters())[param_name]
 
@@ -37,15 +19,11 @@ def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_
     
     impact = impact.detach().requires_grad_(True)
 
-    if g is None:
-        g = torch.zeros_like(param_grad)
-
-    new_params = {param_name: original_param.clone() - lr * g}
-    param_grad_diff = param_grad - g
+    new_params = {param_name: original_param.clone()}
 
     for _ in range(num_steps):
         # Update parameter using impact
-        param_new = original_param - lr * (g.detach() + impact * param_grad_diff.detach())
+        param_new = original_param - lr * impact * param_grad.detach()
         new_params[param_name] = param_new
         # Compute outputs with new parameters
         outputs_new = functional_call(model, new_params, (X_train,))
@@ -66,21 +44,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_
 
 
 def gradient_descent(model, X_train, y_train, param_name, impact, lr, eta, num_steps, criterion, start=None, scale=1.0):
-    """
-    Performs gradient descent to optimize the impact tensor for a given model parameter.
-    Args:
-        model (torch.nn.Module): The neural network model.
-        X_train (torch.Tensor): The input training data.
-        y_train (torch.Tensor): The target training data.
-        param_name (str): The name of the parameter to be optimized.
-        impact (torch.Tensor): The initial impact tensor.
-        lr (float): The learning rate for parameter update.
-        eta (float): The learning rate for impact update.
-        num_steps (int): The number of gradient descent steps.
-        criterion (torch.nn.Module): The loss function.
-    Returns:
-        torch.Tensor: The optimized impact tensor.
-    """
+    
     original_param = dict(model.named_parameters())[param_name]
 
     outputs = model(X_train)

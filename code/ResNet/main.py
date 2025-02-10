@@ -17,7 +17,7 @@ if __name__ == "__main__":
     config = {
         'param_usage': 0.05,
         'num_restarts': 1,
-        'num_epochs': 40,
+        'num_epochs': 1,
     }
 
     compress_configs = [
@@ -41,13 +41,13 @@ if __name__ == "__main__":
         #     'compression_type': 'TopK_EF21',
         #     'lr': 0.001,
         # },
-        # {
-        #     'compression_type': 'ImpK_b_EF21',
-        #     'start': 'ones',
-        #     'lr': 0.001,
-        #     'eta': 2.,
-        #     'num_steps': 20,
-        # },
+        {
+            'compression_type': 'ImpK_b_EF21',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 7.,
+            'num_steps': 25,
+        },
         # {
         #     'compression_type': 'ImpK_b',
         #     'start': 'ones',
@@ -69,13 +69,13 @@ if __name__ == "__main__":
         #     'eta': 2.,
         #     'num_steps': 20,
         # },
-        # {
-        #     'compression_type': 'ImpK_c',
-        #     'start': 'ones',
-        #     'lr': 0.01,
-        #     'eta': 1000000.,
-        #     'num_steps': 25,
-        # },
+        {
+            'compression_type': 'ImpK_c_EF21',
+            'start': 'ones',
+            'lr': 0.01,
+            'eta': 1000000.,
+            'num_steps': 25,
+        },
         # {
         #     'compression_type': 'ImpK_c',
         #     'start': 'ones',
@@ -87,13 +87,6 @@ if __name__ == "__main__":
         #     'compression_type': 'ImpK_c',
         #     'start': 'ones',
         #     'lr': 0.02,
-        #     'eta': 1000000.,
-        #     'num_steps': 20,
-        # },
-        # {
-        #     'compression_type': 'ImpK_c',
-        #     'start': 'topk',
-        #     'lr': 0.01,
         #     'eta': 1000000.,
         #     'num_steps': 20,
         # },
@@ -144,6 +137,8 @@ if __name__ == "__main__":
                 compressor = compressors.ImpK_b_EF21(net, param_usage, start=start)
             elif compression_type == 'ImpK_c':
                 compressor = compressors.ImpK_c(net, param_usage, start=start)
+            elif compression_type == 'ImpK_c_EF21':
+                compressor = compressors.ImpK_c_EF21(net, param_usage, start=start)
             else:
                 raise ValueError(f"Unknown compression type: {compression_type}")
             
