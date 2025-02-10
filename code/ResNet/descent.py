@@ -1,7 +1,7 @@
 import torch
 from torch.func import functional_call
 
-def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, lambda_value, num_steps, criterion, start=None, g=None):
+def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_value, num_steps, criterion, start=None, g=None):
     """
     Perform mirror descent optimization on a specified parameter of a model.
 
@@ -65,7 +65,7 @@ def mirror_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr
     return impact.detach()
 
 
-def gradient_descent(model, X_train, y_train, param_name, impact: torch.Tensor, lr, eta, num_steps, criterion, start=None, scale=1.0):
+def gradient_descent(model, X_train, y_train, param_name, impact, lr, eta, num_steps, criterion, start=None, scale=1.0):
     """
     Performs gradient descent to optimize the impact tensor for a given model parameter.
     Args:

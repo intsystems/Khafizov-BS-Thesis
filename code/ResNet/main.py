@@ -15,9 +15,9 @@ if __name__ == "__main__":
     device = get_device()
 
     config = {
-        'param_usage': 0.001,
+        'param_usage': 0.05,
         'num_restarts': 1,
-        'num_epochs': 1,
+        'num_epochs': 40,
     }
 
     compress_configs = [
@@ -41,19 +41,19 @@ if __name__ == "__main__":
         #     'compression_type': 'TopK_EF21',
         #     'lr': 0.001,
         # },
-        {
-            'compression_type': 'ImpK_b',
-            'start': 'ones',
-            'lr': 0.01,
-            'eta': 2.,
-            'num_steps': 20,
-        },
+        # {
+        #     'compression_type': 'ImpK_b_EF21',
+        #     'start': 'ones',
+        #     'lr': 0.001,
+        #     'eta': 2.,
+        #     'num_steps': 20,
+        # },
         # {
         #     'compression_type': 'ImpK_b',
         #     'start': 'ones',
-        #     'lr': 0.015,
-        #     'eta': 2.,
-        #     'num_steps': 20,
+        #     'lr': 0.01,
+        #     'eta': 7.,
+        #     'num_steps': 25,
         # },
         # {
         #     'compression_type': 'ImpK_b',
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         #     'start': 'ones',
         #     'lr': 0.01,
         #     'eta': 1000000.,
-        #     'num_steps': 20,
+        #     'num_steps': 25,
         # },
         # {
         #     'compression_type': 'ImpK_c',
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         #     'start': 'center',
         #     'lr': 0.01,
         #     'eta': 1000000.,
-        #     'num_steps': 20,
+        #     'num_steps': 25,
         # },
     ]
 
@@ -132,6 +132,8 @@ if __name__ == "__main__":
 
             if compression_type == 'TopK':
                 compressor = compressors.TopK(param_usage)
+            elif compression_type == 'TopK_EF':
+                compressor = compressors.TopK_EF(param_usage, net)
             elif compression_type == 'TopK_EF21':
                 compressor = compressors.TopK_EF21(param_usage, net)
             elif compression_type == 'RandK':
@@ -142,6 +144,8 @@ if __name__ == "__main__":
                 compressor = compressors.ImpK_b_EF21(net, param_usage, start=start)
             elif compression_type == 'ImpK_c':
                 compressor = compressors.ImpK_c(net, param_usage, start=start)
+            else:
+                raise ValueError(f"Unknown compression type: {compression_type}")
             
             optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
             criterion = nn.CrossEntropyLoss()
@@ -159,27 +163,27 @@ if __name__ == "__main__":
                 num_steps=num_steps,
                 device=device
             )
-            print(f"Compression type: {compression_type}, start: {start}, num_restart: {num_restart}, lr: {lr}, eta: {eta}, num_steps: {num_steps}")
-            print("Train Loss")
+            print(f"# Compression type: {compression_type}, start: {start}, num_restart: {num_restart}, lr: {lr}, eta: {eta}, num_steps: {num_steps}")
+            print("# Train Loss")
             print(train_loss)
-            print("Train Accuracy")
+            print("# Train Accuracy")
             print(train_accuracy)
-            print("Test Loss")
+            print("# Test Loss")
             print(test_loss)
-            print("Test Accuracy")
+            print("# Test Accuracy")
             print(test_accuracy)
             train_log[name].append(train_loss)
             train_acc[name].append(train_accuracy)
             test_log[name].append(test_loss)
             test_acc[name].append(test_accuracy)
 
-    print("Train Loss")
+    print("# Train Loss")
     print(train_log)
-    print("Train Accuracy")
+    print("# Train Accuracy")
     print(train_acc)
-    print("Test Loss")
+    print("# Test Loss")
     print(test_log)
-    print("Test Accuracy")
+    print("# Test Accuracy")
     print(test_acc)
 
     log_dir = 'logs'
@@ -191,13 +195,13 @@ if __name__ == "__main__":
     log_file = os.path.join(log_dir, f"training_log_{date}.txt")
 
     with open(log_file, 'w') as f:
-        f.write("Train Loss\n")
+        f.write("# Train Loss\n")
         f.write(str(train_log) + "\n")
-        f.write("Train Accuracy\n")
+        f.write("# Train Accuracy\n")
         f.write(str(train_acc) + "\n")
-        f.write("Test Loss\n")
+        f.write("# Test Loss\n")
         f.write(str(test_log) + "\n")
-        f.write("Test Accuracy\n")
+        f.write("# Test Accuracy\n")
         f.write(str(test_acc) + "\n")
 
     fig_train, axs_train = plt.subplots(1, 2, figsize=(16, 7))

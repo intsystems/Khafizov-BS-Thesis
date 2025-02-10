@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import torch
 from descent import gradient_descent, mirror_descent
 
@@ -46,6 +47,55 @@ class TopK:
         compressed_tensor = tensor * mask
         compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
         return compressed_tensor
+
+class TopK_EF:
+    """
+    A class used to compress gradients by selecting the top-k values and using Error Feedback 21.
+    Attributes
+    ----------
+    k : int
+        The number of top values to select.
+    Methods
+    -------
+    compress(name, param)
+        Compresses the gradient of the given parameter by selecting the top-k values with EF21.
+    """
+    def __init__(self, k, model):
+        """
+        Initializes the compressor with a given parameter.
+        Args:
+            k (int): The parameter to initialize the compressor with.
+        """
+        self.k = k
+        self.e = {name: torch.zeros_like(param) for name, param in model.named_parameters() if param.requires_grad}
+    
+    def update(self, *args, **kwargs):
+        """
+        Placeholder for the update method.
+        """
+        pass
+
+    def compress(self, name, param):
+        """
+        Compresses the gradient tensor by retaining only the top-k absolute values.
+        Args:
+            name (str): The name of the parameter (not used in the current implementation).
+            param (torch.nn.Parameter): The parameter whose gradient tensor is to be compressed.
+        Returns:
+            torch.Tensor: The compressed gradient tensor with only the top-k absolute values retained.
+        """
+        # compression of difference
+        k = int(self.k * param.numel())
+        tensor = (param.grad + self.e[name]).view(-1)  # Flatten the tensor to a vector
+        topk_values, topk_indices = tensor.abs().topk(k)
+        mask = torch.zeros_like(tensor, dtype=torch.bool)
+        mask.scatter_(0, topk_indices, True)
+        compressed_tensor = tensor * mask
+        compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
+        # update g
+        self.e[name] += param.grad - compressed_tensor
+        return compressed_tensor
+
 
 class TopK_EF21:
     """
@@ -168,7 +218,7 @@ class ImpK_b:
     compress(name, param)
         Compresses the given parameter tensor based on the importance weights.
     """
-    def __init__(self, model, k, start='abs', weighted=True):
+    def __init__(self, model, k, start='ones', weighted=True):
         """
         Initializes the compressor with the given model, compression factor, and mode.
 
@@ -180,7 +230,7 @@ class ImpK_b:
         """
         self.model = model
         self.k = k
-        self.w = {name: (imp := torch.ones_like(param))
+        self.w = {name: torch.ones_like(param)
             for name, param in model.named_parameters()
         }
         self.start = start
@@ -210,19 +260,24 @@ class ImpK_b:
         None
         """
         for name, param in self.model.named_parameters():
+            if 'bn' in name or 'shortcut.1' in name:
+                continue
             self.w[name] = mirror_descent(
                 model=self.model,
                 param_name=name,
                 impact=self.w[name],
                 lr=lr,
                 eta=eta,
-                lambda_value=0.1,
+                lambda_value=0.001,
                 num_steps=num_steps,
                 X_train=X_train,
                 y_train=y_train,
                 criterion=criterion,
                 start=self.start
             )
+            # plt.hist(self.w[name].cpu().detach().flatten(), bins=50, label=name)
+            # plt.show()
+            print(f'{name} min: {self.w[name].min():.5f}, max: {self.w[name].max():.5f}, min/max: {self.w[name].min()/self.w[name].max():.3f}')
 
     def compress(self, name, param):
         """
@@ -294,7 +349,6 @@ class ImpK_b_EF21:
         self.w = {name: (imp := torch.ones_like(param))
             for name, param in model.named_parameters()
         }
-        self.g = {name: torch.zeros_like(param) for name, param in model.named_parameters()}
         self.start = start
         self.weighted = weighted
 
@@ -322,13 +376,15 @@ class ImpK_b_EF21:
         None
         """
         for name, param in self.model.named_parameters():
+            if 'bn' in name or 'shortcut.1' in name:
+                continue
             self.w[name] = mirror_descent(
                 model=self.model,
                 param_name=name,
                 impact=self.w[name],
                 lr=lr,
                 eta=eta,
-                lambda_value=0.1,
+                lambda_value=0.001,
                 num_steps=num_steps,
                 X_train=X_train,
                 y_train=y_train,
@@ -437,6 +493,8 @@ class ImpK_c:
         None
         """
         for name, param in self.model.named_parameters():
+            if 'bn' in name or 'shortcut.1' in name:
+                continue
             self.w[name] = gradient_descent(
                 model=self.model,
                 param_name=name,
@@ -450,6 +508,10 @@ class ImpK_c:
                 start=self.start,
                 scale=self.scale
             )
+            # plt.hist(self.w[name].cpu().detach().flatten(), bins=50, label=name)
+            # plt.show()
+            # print(f'{name} min: {self.w[name].min():.5f}, max: {self.w[name].max():.5f}, min/max: {self.w[name].min()/self.w[name].max():.3f}')
+
 
     def compress(self, name, param):
         """
