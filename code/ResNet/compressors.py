@@ -19,27 +19,6 @@ class TopK:
         compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
         return compressed_tensor
 
-class TopK_EF:
-    def __init__(self, k, model):
-        self.k = k
-        self.e = {name: torch.zeros_like(param) for name, param in model.named_parameters() if param.requires_grad}
-    
-    def update(self, *args, **kwargs):
-        pass
-
-    def compress(self, name, param):
-        # compression of difference
-        k = int(self.k * param.numel())
-        tensor = (param.grad + self.e[name]).view(-1)  # Flatten the tensor to a vector
-        topk_values, topk_indices = tensor.abs().topk(k)
-        mask = torch.zeros_like(tensor, dtype=torch.bool)
-        mask.scatter_(0, topk_indices, True)
-        compressed_tensor = tensor * mask
-        compressed_tensor = compressed_tensor.view(param.grad.size())  # Reshape back to original size
-        # update g
-        self.e[name] += param.grad - compressed_tensor
-        return compressed_tensor
-
 
 class TopK_EF21:
     def __init__(self, k, model):
@@ -214,11 +193,17 @@ class ImpK_b_EF:
                 y_train=y_train,
                 criterion=criterion,
                 start=self.start,
+                e=self.e[name]
             )
+            # plt.hist(self.w[name].cpu().detach().flatten(), bins=50, label=name)
+            # plt.show()
+            # print(f'{name} min: {self.w[name].min():.5f}, max: {self.w[name].max():.5f}, min/max: {self.w[name].min()/self.w[name].max():.3f}')
+
 
     def compress(self, name, param):
         k = int(self.k * param.numel())
-        tensor = (param.grad * self.w[name] + self.e[name]).view(-1)  # Flatten the tensor to a vector
+        
+        tensor = ((param.grad + self.e[name]) * self.w[name]).view(-1)  # Flatten the tensor to a vector
         topk_values, topk_indices = tensor.abs().topk(k)
         mask = torch.zeros_like(tensor, dtype=torch.bool)
         mask.scatter_(0, topk_indices, True)

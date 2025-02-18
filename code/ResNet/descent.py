@@ -1,13 +1,17 @@
 import torch
 from torch.func import functional_call
 
-def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_value, num_steps, criterion, start=None):
+def mirror_descent(model, X_train, y_train, param_name, impact, lr, eta, lambda_value, num_steps, criterion, start=None, e=None):
 
     original_param = dict(model.named_parameters())[param_name]
 
     outputs = model(X_train)
     loss = criterion(outputs, y_train)
-    param_grad = torch.autograd.grad(loss, original_param, retain_graph=True, create_graph=False)[0]
+    
+    if e is None:
+        param_grad = torch.autograd.grad(loss, original_param)[0]
+    else:
+        param_grad = torch.autograd.grad(loss, original_param)[0] + e
     
     if start == 'abs':
         with torch.no_grad():

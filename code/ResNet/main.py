@@ -7,6 +7,7 @@ import torch.nn as nn
 import numpy as np
 import datetime
 import os
+import csv
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     device = get_device()
 
     config = {
-        'param_usage': 0.05,
+        'param_usage': 0.005,
         'num_restarts': 1,
         'num_epochs': 1,
     }
@@ -38,14 +39,14 @@ if __name__ == "__main__":
         #     'lr': 0.05,
         # },
         # {
-        #     'compression_type': 'TopK_EF21',
+        #     'compression_type': 'TopK_EF',
         #     'lr': 0.001,
         # },
         {
-            'compression_type': 'ImpK_b_EF21',
+            'compression_type': 'ImpK_b_EF',
             'start': 'ones',
-            'lr': 0.01,
-            'eta': 7.,
+            'lr': 0.001,
+            'eta': 1000000.,
             'num_steps': 25,
         },
         # {
@@ -69,13 +70,13 @@ if __name__ == "__main__":
         #     'eta': 2.,
         #     'num_steps': 20,
         # },
-        {
-            'compression_type': 'ImpK_c_EF21',
-            'start': 'ones',
-            'lr': 0.01,
-            'eta': 1000000.,
-            'num_steps': 25,
-        },
+        # {
+        #     'compression_type': 'ImpK_c_EF21',
+        #     'start': 'ones',
+        #     'lr': 0.01,
+        #     'eta': 1000000.,
+        #     'num_steps': 25,
+        # },
         # {
         #     'compression_type': 'ImpK_c',
         #     'start': 'ones',
@@ -133,10 +134,14 @@ if __name__ == "__main__":
                 compressor = compressors.RandK(param_usage)
             elif compression_type == 'ImpK_b':
                 compressor = compressors.ImpK_b(net, param_usage, start=start)
+            elif compression_type == 'ImpK_b_EF':
+                compressor = compressors.ImpK_b_EF(net, param_usage, start=start)
             elif compression_type == 'ImpK_b_EF21':
                 compressor = compressors.ImpK_b_EF21(net, param_usage, start=start)
             elif compression_type == 'ImpK_c':
                 compressor = compressors.ImpK_c(net, param_usage, start=start)
+            elif compression_type == 'ImpK_c_EF':
+                compressor = compressors.ImpK_c_EF(net, param_usage, start=start)
             elif compression_type == 'ImpK_c_EF21':
                 compressor = compressors.ImpK_c_EF21(net, param_usage, start=start)
             else:
@@ -185,19 +190,34 @@ if __name__ == "__main__":
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-
     date = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f"training_log_{date}.txt")
+    log_file = os.path.join(log_dir, f"training_log_{date}.csv")
 
-    with open(log_file, 'w') as f:
-        f.write("# Train Loss\n")
-        f.write(str(train_log) + "\n")
-        f.write("# Train Accuracy\n")
-        f.write(str(train_acc) + "\n")
-        f.write("# Test Loss\n")
-        f.write(str(test_log) + "\n")
-        f.write("# Test Accuracy\n")
-        f.write(str(test_acc) + "\n")
+    with open(log_file, 'w', newline='') as csvfile:
+        fieldnames = ['type', 'train_log', 'train_acc', 'test_log', 'test_acc', 'epoch']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for compress_config in compress_configs:
+            compression_type = compress_config['compression_type']
+            start = compress_config.get('start', '')
+            lr = compress_config.get('lr', '')
+            eta = compress_config.get('eta', '')
+            num_steps = compress_config.get('num_steps', '')
+
+            name = f'{compression_type}_{param_usage*100:.0f}%_{lr}_{"EF" if "EF" in compression_type else ""}'
+
+            for epoch in range(num_epochs):
+                for restart in range(num_restarts):
+                    dict_name = f'{compression_type}_{start}_{lr}'
+                    writer.writerow({
+                        'type': name,
+                        'epoch': epoch,
+                        'train_log': train_log[dict_name][restart][epoch],
+                        'train_acc': train_acc[dict_name][restart][epoch],
+                        'test_log': test_log[dict_name][restart][epoch],
+                        'test_acc': test_acc[dict_name][restart][epoch]
+                    })
 
     fig_train, axs_train = plt.subplots(1, 2, figsize=(16, 7))
     fig_test, axs_test = plt.subplots(1, 2, figsize=(16, 7))
