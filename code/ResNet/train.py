@@ -24,6 +24,8 @@ def train(model, optimizer, compressor, criterion, train_dataset, val_dataset, n
             loss.backward()
             
             for name, param in model.named_parameters():
+                if 'bn' in name or 'shortcut.1' in name:
+                    continue
                 param.grad.copy_(compressor.compress(name, param))
             
             optimizer.step()

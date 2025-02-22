@@ -38,14 +38,14 @@ if __name__ == "__main__":
         #     'compression_type': 'TopK',
         #     'lr': 0.05,
         # },
-        # {
-        #     'compression_type': 'TopK_EF',
-        #     'lr': 0.001,
-        # },
+        {
+            'compression_type': 'TopK_EF',
+            'lr': 0.005,
+        },
         {
             'compression_type': 'ImpK_b_EF',
             'start': 'ones',
-            'lr': 0.001,
+            'lr': 0.005,
             'eta': 1000000.,
             'num_steps': 25,
         },
