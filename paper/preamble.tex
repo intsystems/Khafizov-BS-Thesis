@@ -1,0 +1,151 @@
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[square,sort,comma,numbers]{natbib}
+\usepackage{doi}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{pifont}
+\usepackage{colortbl}
+
+\usepackage{pdfpages}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix}
+
+% Алгоритмы
+\usepackage{algorithm}
+\usepackage{algorithmic}
+% \makeatletter
+% \renewcommand{\ALG@name}{Алгоритм}
+% \makeatother
+
+%% Шрифты
+\usepackage{euscript}
+\usepackage{mathrsfs}
+\usepackage{extsizes}
+
+\usepackage{makecell}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools,dsfont}
+\usepackage{icomma}
+
+\usepackage{hyperref}
+
+\hypersetup{
+	unicode=true,
+	pdftitle={Адаптивное сжатие в распределенной оптимизации},
+	pdfauthor={Хафизов Фанис Адикович},
+	pdfkeywords={распределенная оптимизация, смещенные операторы сжатия},
+	colorlinks=true,
+	linkcolor=black,        % внутренние ссылки
+	citecolor=green,        % на библиографию
+	filecolor=magenta,      % на файлы
+	urlcolor=blue           % на URL
+}
+
+\graphicspath{{pictures}}
+
+\usepackage{enumitem} % Для модификаций перечневых окружений
+\usepackage{etoolbox}
+
+\makeatletter
+\expandafter\patchcmd\csname\string\algorithmic\endcsname{\itemsep\z@}{\itemsep=1.5mm}{}{}
+\makeatother
+
+\usepackage{geometry}
+\geometry{left=3cm}
+\geometry{right=1.5cm}
+\geometry{top=2.0cm}
+\geometry{bottom=2.0cm}
+\setlength\parindent{5ex}    % Устанавливает длину красной строки 15pt
+\linespread{1.5}             % Коэффициент межстрочного интервала
+\usepackage[center]{titlesec}
+
+\usepackage{icomma}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{tabularx}
+\usepackage{url}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{indentfirst}
+
+% Теоремы
+\newtheorem{theorem}{Теорема}
+\newtheorem{lemma}{Лемма}
+\newtheorem{proposition}{Утверждение}
+\newtheorem*{exercise}{Упражнение}
+\newtheorem*{problem}{Задача}
+\newtheorem{definition}{Определение}
+\newtheorem{corollary}{Следствие}
+\newtheorem*{note}{Замечание}
+\newtheorem*{reminder}{Напоминание}
+\newtheorem*{example}{Пример}
+\newtheorem*{cexample}{Контрпример}
+\newtheorem*{solution}{Решение}
+
+\renewcommand{\abstractname}{Аннотация}
+
+%%% Basic sets
+
+% caligraphic
+\newcommand{\cA}{{\cal A}}
+\newcommand{\cB}{{\cal B}}
+\newcommand{\cC}{{\cal C}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\cE}{{\cal E}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cG}{{\cal G}}
+\newcommand{\cH}{{\cal H}}
+\newcommand{\cJ}{{\cal J}}
+\newcommand{\cK}{{\cal K}}
+\newcommand{\cL}{{\cal L}}
+\newcommand{\cM}{{\cal M}}
+\newcommand{\cN}{{\cal N}}
+\newcommand{\cO}{{\cal O}}
+\newcommand{\cP}{{\cal P}}
+\newcommand{\cQ}{{\cal Q}}
+\newcommand{\cR}{{\cal R}}
+\newcommand{\cS}{{\cal S}}
+\newcommand{\cT}{{\cal T}}
+\newcommand{\cU}{{\cal U}}
+\newcommand{\cV}{{\cal V}}
+\newcommand{\cX}{{\cal X}}
+\newcommand{\cY}{{\cal Y}}
+\newcommand{\cW}{{\cal W}}
+\newcommand{\cZ}{{\cal Z}}
+
+%
+\newcommand{\R}{\mathbb{R}} % reals
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\N}{\mathbb{N}} % Naturals
+
+
+% bold
+\newcommand{\bA}{{\bf A}}
+\newcommand{\bB}{{\bf B}}
+\newcommand{\bC}{{\bf C}}
+\newcommand{\bE}{{\bf E}}
+\newcommand{\bI}{{\bf I}}
+\newcommand{\bS}{{\bf S}}
+\newcommand{\bZ}{{\bf Z}}
+
+\DeclareMathOperator{\impk}{ImpK}
+\DeclareMathOperator{\topk}{TopK}
+\DeclareMathOperator{\randk}{RandK}
