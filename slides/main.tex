@@ -1,5 +1,6 @@
 \PassOptionsToPackage{dvipsnames}{xcolor}
 \documentclass{beamer}
+\usepackage[T2A]{fontenc}
 \beamertemplatenavigationsymbolsempty
 \usecolortheme{beaver}
 \setbeamertemplate{blocks}[rounded=true, shadow=true]
@@ -10,13 +11,19 @@
 \usepackage[english,russian]{babel}
 \usepackage{amssymb,amsfonts,amsmath,mathtext}
 \usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage{algorithmic}
 \makeatletter
 \renewcommand{\ALG@name}{Алгоритм}
 \makeatother
 
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
+
+\newtheorem{mytheorem}{Теорема}
+\newtheorem{mycorollary}{Следствие}
+\newtheorem{myassumption}{Предположение}
+\newtheorem{mydefinition}{Определение}
+
 
 %----------------------------------------------------------------------------------------------------------
 
@@ -54,17 +61,15 @@
 
     $ $\\
 
-    \textbf{Решение:} Предлагается семейство смещенных операторов сжатия, использующие показатели важности весов.
+    \textbf{Решение:} Предлагаются семейство смещенных операторов сжатия, использующие показатели важности весов, и схема компенсации ошибок.
 
 \end{frame}
 
 \begin{frame}{Литература}
     \begin{itemize}
-     \item Aleksandr Beznosikov, Samuel Horváth, Peter Richtárik, Mher Safaryan. On Biased Compression for Distributed Learning. 2024
-     \item Nam Nguyen, Deanna Needell, Tina Woolf. Linear Convergence of Stochastic Iterative Greedy Algorithms with Sparse Constraints. 2014
+        \item Aleksandr Beznosikov, Samuel Horváth, Peter Richtárik, Mher Safaryan. On Biased Compression for Distributed Learning. 2024
+        \item Peter Richtárik, Igor Sokolov, Ilyas Fatkhullin. EF21: A New, Simpler, Theoretically Better, and Practically Faster Error Feedback. 2021
     \end{itemize}
-
-
 \end{frame}
 
 %-----------------------------------------------------------------------------------------------------
@@ -75,15 +80,31 @@
     \begin{align*}
      \min_{x \in \mathbb{R}^d}\left\{f(x) := \frac{1}{n}\sum\limits_{i = 1}^n f_i(x) \right\},
     \end{align*}
-    где $n$ -- количество устройств, $x$ -- обучаемые параметры, $f_i(x)$ -- функция потерь для $i$-го устройства.\\
+    где $n$~-- количество устройств, $x$~-- обучаемые параметры, $f_i(x)$~-- функция потерь для $i$-го устройства.\\
+    $f_i$~-- $\mu$-сильно выпуклая и $L$-гладкая функция.\\
     Требуется сократить количество передаваемой информации, не сильно потеряв в скорости обучения.
 
 \end{frame}
 
+\begin{frame}{Предположения}
+    \begin{myassumption}
+        Функция $f$ называется $\mu$-сильно выпуклой, если для любых $x, y \in \mathbb{R}^d$ выполняется следующее неравенство:
+        \begin{equation}
+            f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2} \|y - x\|_2^2, \label{eq:strong_convexity}
+        \end{equation}
+        где $\mu > 0$~--- константа сильной выпуклости.
+    \end{myassumption}
+
+    \begin{myassumption}
+        Функция $f$ называется $L$-гладкой, если для любых $x, y \in \mathbb{R}^d$ выполняется следующее неравенство:
+        \begin{equation}
+            \|\nabla f(y) - \nabla f(x)\|_2 \leq L \|y - x\|_2, \label{eq:smoothness}
+        \end{equation}
+        где $L > 0$~--- константа гладкости.
+    \end{myassumption}
+\end{frame}
+
 %------------------------------------------------------------
-
-
-%----------------------------------------------------------------------------------------------------------
 
 \begin{frame}{Исследуемый метод}
     Для решения задачи распределенной оптимизации используется градиентный спуск со сжатием (DCGD)
@@ -99,38 +120,6 @@
     \end{align*}
 \end{frame}
 
-\begin{frame}{Исследуемый метод}
-    Для еще большего сокращения размера передаваемой информации добавим оператор квантизации $\mathcal{Q}$.\\
-    Метод DCGD тогда перепишется:
-    \begin{align*}
-     x^{k + 1} = x^k - \frac{\eta}{n} \sum\limits_{i = 1}^n \mathcal{Q}\left(\mathcal{C}_i^k(\nabla f_i(x^k))\right).
-    \end{align*}
-    Для одного устройства:
-    \begin{align*}
-     x^{k + 1} = x^k - \eta\mathcal{Q}\left(\mathcal{C}^k(\nabla f(x^k))\right).
-    \end{align*}
-    В качестве оператора $\mathcal{Q}$ выбрано округление до ближайшей степени 2.
-\end{frame}
-
-%----------------------------------------------------------------------------------------------------------
-
-\begin{frame}{Базовое решение}
-    В качестве базового решения рассматриваются операторы сжатия:
-    \begin{itemize}
-     \item RandK:
-     \begin{align*}
-      \mathcal{C}(x) := \frac{d}{k} \sum_{i \in S} x_i e_i,
-     \end{align*}
-     где $S \subseteq [d]$ -- случайный поднабор индексов размера $k$.
-     \item TopK:
-     \begin{align*}
-      \mathcal{C}(x) := \frac{d}{k} \sum_{i = d - k + 1}^d x_{(i)} e_{(i)},
-     \end{align*}
-     где координаты расположены по неубыванию модуля $|x_{(1)}| \leq |x_{(2)}| \leq \dots \leq |x_{(d)}|$.
-    \end{itemize}
-
-\end{frame}
-
 %----------------------------------------------------------------------------------------------------------
 
 \begin{frame}{Предлагаемые операторы сжатия}
@@ -138,68 +127,150 @@
     $ $\\
     Для нахождения вектора $w$ решается задача оптимизации
     \begin{align*}
-     w^k = \argmin_{w \in \Delta_d} f(x^k - \eta w \odot \nabla f(x^k)),
+     w^k = \argmin_{w \in Q} f(x^k - \eta w \odot \nabla f(x^k)),
     \end{align*}
-    где $\Delta_d = \left\{x \in \mathbb{R}^d ~|~ \sum\limits_{i = 1}^d x_i = 1, x_i \geq 0 ~ \forall i = \overline{1, d}\right\}$ -- вероятностный симплекс, $\odot$ -- поэлементное умножение.\\
-    $ $\\
-    Задача нахождения $w^k$ решается методом зеркального спуска на вероятностном симплексе.
+    где $Q$ -- ограниченное множество, $\odot$ -- поэлементное умножение.\\
+
+    В качестве $Q$ рассмотрены следующие варианты:
+    \begin{itemize}
+        \item $\Delta_{d - 1} = \{x \in \mathbb{R}^d ~|~ \|x\|_1 = d, x_i \geq 0, i = \overline{1, d}\}$~--- симплекс размерности $d - 1$;
+        \item $[a, b]^d$~--- куб со сторонами длиной $b - a$.
+    \end{itemize}
 \end{frame}
 
 %----------------------------------------------------------------------------------------------------------
 
 \begin{frame}{Примеры операторов сжатия с важностью}
     \begin{itemize}
-     \item MD Stochastic
-     \begin{align*}
-      \mathcal{C}(x, w) := \frac{d}{k} \sum_{i \in S} x_i e_i,
-     \end{align*}
-     где $S \subseteq [d]$ -- случайный поднабор индексов размера $k$, вероятность выбора $i$-й компоненты равна $w_i$.
-     \item MD Greedy
-     \begin{align*}
-      \mathcal{C}(x, w) := \frac{d}{k} \sum_{i = d - k + 1}^d x_{(i)} e_{(i)},
-     \end{align*}
-     где координаты расположены по неубыванию $w$: $w_{(1)} \leq w_{(2)} \leq \dots \leq w_{(d)}$.
+        \item \textbf{Важностное прореживание}.\\
+        \begin{equation}
+            \mathcal{C}(\nabla f(x)) = \sum_{i=1}^k \nabla_{(i)} f(x) e_{(i)},
+        \end{equation}
+        где координаты расположены по убыванию значений важности $w_{(1)} \geq w_{(2)} \geq \dots \geq w_{(d)}$.
+        \item \textbf{Рандомизированное важностное прореживание}\\
+        \begin{equation}
+            \mathcal{C}(\nabla f(x)) = \sum_{i \in S} \nabla_i f(x) e_i,
+        \end{equation}
+        где $S$~--- множество индексов, выбранных случайно с вероятностью, пропорциональной значениям важности $w$.
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Примеры операторов сжатия с важностью}
     \begin{itemize}
-    \item MD Greedy Weighted
-     \begin{align*}
-      \mathcal{C}(x, w) := \frac{d}{k} \sum_{i = d - k + 1}^d w_{(i)} x_{(i)} e_{(i)},
-     \end{align*}
-     где координаты расположены по неубыванию $w$: $w_{(1)} \leq w_{(2)} \leq \dots \leq w_{(d)}$.
-
-    \item MD Weighted Greedy
-     \begin{align*}
-      \mathcal{C}(x, w) := \frac{d}{k} \sum_{i = d - k + 1}^d w_{(i)} x_{(i)} e_{(i)},
-     \end{align*}
-     где координаты расположены по неубыванию взвешенных модулей: $|w_{(1)} x_{(1)}| \leq |w_{(2)} x_{(2)}| \leq \dots \leq |w_{(d)} x_{(d)}|$.
+        \item \textbf{Важностное прореживание с перевзвешиванием}\\
+        \begin{equation}
+            \mathcal{C}(\nabla f(x)) = \sum_{i=1}^k w_{(i)} \nabla_{(i)} f(x) e_{(i)},
+        \end{equation}
+        где координаты расположены по убыванию значений $|w_{(1)} \nabla_{(1)} f(x)| \geq \dots \geq |w_{(d)} \nabla_{(d)} f(x)|$.
+        \item \textbf{Рандомизированное важностное прореживание с перевзвешиванием}\\
+        \begin{equation}
+            \mathcal{C}(\nabla f(x)) = \sum_{i \in S} w_i \nabla_i f(x) e_i,
+        \end{equation}
+        где $S$~--- множество индексов, выбранных случайно с вероятностью, пропорциональной значениям важности $w$.
     \end{itemize}
-
 \end{frame}
 
 %----------------------------------------------------------------------------------------------------------
 
+\begin{frame}{Сходимость DCGD с оператором $ImpK$}
+    \begin{mytheorem}[Хафизов Ф.\,А., 2025]
+        Пусть $Q = [1, 2]^d, \gamma \leq \frac{2}{L}$. Тогда
+        \begin{equation}
+            f(x^T) - f^* \leq \left(1 - 2\mu \gamma \left(\frac{k}{d} - 2 L \gamma\right)\right)^T (f(x^0) - f^*).
+        \end{equation}
+    \end{mytheorem}
+    \begin{mycorollary}
+        При выборе $\gamma = \frac{k}{4dL}$ для достижения точности $\varepsilon > 0$ по функции требуется
+        \begin{equation}
+            T \geq \frac{4L}{\mu} \left(\frac{d}{k}\right)^2 \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right)
+        \end{equation}
+        итераций.
+    \end{mycorollary}
+\end{frame}
 
-\begin{frame}{Эксперимент. Логистическая регрессия}
+\begin{frame}{Схема компенсации ошибок SCAM}
+    \begin{algorithm}[H]
+        \caption{SCAM (Одно устройство)}
+        \label{alg:scam_single}
+        \begin{algorithmic}
+            \STATE {\bf Ввод:} стартовая точка $x^0$, шаг обучения $\gamma$, количество итераций $T$, начальная ошибка $\varepsilon^0 = 0$.
+            \FOR{$t = 0, 1, \ldots, T - 1$}
+                \STATE $g^t = \nabla f(x^t)$
+                \STATE $c = \mathcal{C}^t (\varepsilon^t + g^t)$
+                \STATE $\tilde{g}^t = \mathcal{C}^t \left(\sum\limits_{i=1}^{d} I\{c_i \neq 0\} g^t_i e_i\right)$
+                \STATE $\varepsilon^t = \varepsilon^{t-1} + g^t - \tilde{g}^t$\\
+                \STATE $x^{t+1} = x^t - \gamma \tilde{g}^t$
+            \ENDFOR
+            \STATE {\bf Вывод:} $x^k$
+        \end{algorithmic}
+    \end{algorithm}
+    
+\end{frame}
 
-    \begin{figure}
-     \centering
-     \includegraphics[width=0.9\textwidth]{../figures/LogReg}
-     \caption{Сравнение операторов сжатия, задача логистической регрессии на датасете mushrooms, доля передаваемых компонент $k/d = 0.2$}
+
+
+\begin{frame}{Сходимость SCAM с оператором $TopK$}
+    \begin{myassumption}\label{prop:scam_single_partial_norm}
+        В схеме SCAM $TopK$ частично сохраняет норму градиента:
+        \begin{equation}
+            \|\tilde{g}^t\|_2^2 \geq \delta \|g^t\|_2^2.
+        \end{equation}
+    \end{myassumption}
+    \begin{mytheorem}[Хафизов Ф.\,А., 2025]
+        Пусть $\gamma \leq \frac{2}{L}$. Тогда для любого $T \geq 1$ верно:
+        \begin{equation}
+            f(x^T) - f^* \leq (1 - \mu \gamma (2 - L \gamma) \delta)^T (f(x^0) - f^*).
+        \end{equation}
+    \end{mytheorem}
+    \begin{mycorollary}
+        Пусть выбрано значение шага $\gamma = \frac{1}{L}, \delta \simeq \frac{k}{d}$. Тогда для достижения точности $\varepsilon > 0$ по функции требуется
+        \begin{equation}
+            T \simeq \frac{L d}{\mu k} \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right).
+        \end{equation}
+        итераций.
+    \end{mycorollary}
+\end{frame}
+
+\begin{frame}{Эксперимент. Классификация изображений}
+
+    \begin{figure}[ht]
+        \centering
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/resnet/experiment2/Train Loss.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/resnet/experiment2/Train Accuracy.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/resnet/experiment2/Test Loss.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/resnet/experiment2/Test Accuracy.pdf}
+        \end{minipage}
+        \caption{Сравнение сходимости предложенного метода SCAM с $ImpK_c$ и вариациями $TopK$ в процессе обучения ResNet-18 на CIFAR-10.}
     \end{figure}
 
 \end{frame}
 
 %----------------------------------------------------------------------------------------------------------
 
-\begin{frame}{Эксперимент. Классификация изображений}
+\begin{frame}{Эксперимент. Трансформерная архитектура}
 
-    \begin{figure}
-     \centering
-     \includegraphics[width=\textwidth]{../figures/ResNet_CIFAR10}
-     \caption{Сравнение операторов сжатия, задача классификации изображений на датасете CIFAR10, модель ResNet18, доля передаваемых компонент $k/d = 0.2$}
+    \begin{figure}[ht]
+        \centering
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/gpt2/experiment2/Train Loss.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/gpt2/experiment2/Train Perplexity.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/gpt2/experiment2/Test Loss.pdf}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \includegraphics[width=\textwidth]{../paper/figures/gpt2/experiment2/Test Perplexity.pdf}
+        \end{minipage}
+        \caption{Сравнение сходимости предложенного метода SCAM с $ImpK_s$ и вариациями $TopK$ в процессе обучения GPT-2 на WikiText2.}
     \end{figure}
 
 \end{frame}
@@ -209,14 +280,11 @@
 \begin{frame}{Заключение}
     \begin{block}{Выносится на защиту}
     \begin{enumerate}
-        \item Предложено семейство операторов сжатия, использующие вектор важности. Из него приведены 4 примера операторов.
-        \item Вычислительные эксперименты показали, что предложенные операторы работают не хуже RandK, оператор MD Weighted Greedy работает на уровне TopK.
-    \end{enumerate}
-    \end{block}
-    \begin{block}{Будущая работа}
-    \begin{enumerate}
-        \item Продолжать эксперименты, получить сходимость лучше TopK.
-        \item Развить теорию для описанного семейства смещенных операторов.
+        \item Предложено семейство операторов сжатия, использующие вектор важности.
+        \item Для одного оператора сжатия по важности получена оценка сходимости.
+        \item Предложена схема компенсации ошибки SCAM.
+        \item Получена теоретическая оценка сходимости для SCAM с оператором $TopK$.
+        \item Вычислительные эксперименты показали превосходство схемы SCAM с $ImpK$ над остальными методами.
     \end{enumerate}
     \end{block}
 
