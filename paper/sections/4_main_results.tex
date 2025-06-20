@@ -31,11 +31,11 @@
         \begin{itemize}
             \item при выборе $Q = \Delta_{d - 1}$ итерация метода зеркального спуска имеет вид:
             \begin{equation}\label{eq:mirror_descent_step}
-                x^{k + 1} = x^k.
+                w^{k + 1} = d \cdot \frac{w^k \odot \exp[\eta \gamma \nabla f(x - \gamma w^k \odot \nabla f(x)) \odot \nabla f(x)]}{\sum_{i = 1}^d \left[w^k \odot \exp[\eta \gamma \nabla f(x - \gamma w^k \odot \nabla f(x)) \odot \nabla f(x)]\right]_i}.
             \end{equation}
-            \item при выборе $Q = [a, b]^d$ итерация метода зеркального спуска имеет вид:
+            \item при выборе $Q = [a, b]^d$ итерация метода градиентного спуска с проекцией имеет вид:
             \begin{equation}\label{eq:proj_gradient_descent_step}
-                x^{k + 1} = \max(a, \min(b, x^k - \eta \cdot \gamma \nabla f(x^k))),
+                w^{k + 1} = \max\left(a, \min\left(b, w^k + \eta \gamma \nabla f(x - \gamma w^k \odot \nabla f(x)) \odot \nabla f(x)\right)\right),
             \end{equation}
             где операции $\min$ и $\max$ выполняются поэлементно.
         \end{itemize}
@@ -86,7 +86,7 @@
         \end{algorithmic}
     \end{algorithm}
 
-    \begin{algorithm}[h]
+    \begin{algorithm}[ht]
         \caption{DCGD с важностным компрессором (Несколько устройств)}
         \label{alg:dcgd_multi}
         \begin{algorithmic}[1]
@@ -109,7 +109,7 @@
     \begin{theorem}\label{th:dcgd_single}
         Пусть задача \eqref{eq:problem_statement} решается с помощью DCGD с оператором сжатия $\impk$ (см. алгоритм \ref{alg:dcgd_single}). В качестве множества $Q$ выбран куб $[1, 2]^d$. Тогда для любого $t \geq 1$ выполняется следующее неравенство:
         \begin{equation}
-            f(x^{t + 1}) \leq f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \|\tilde{g}^t\|_2^2,
+            f(x^{t + 1}) \leq f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \|\tilde{g}^t\|_2^2,
         \end{equation}
         где $x^0 \in \R^d$~--- стартовая точка, $L$~--- константа гладкости функции $f$, $\gamma$~--- шаг обучения.
     \end{theorem}
@@ -128,27 +128,27 @@
     \begin{theorem}\label{th:dcgd_single_convergence}
         Пусть выполняются условия теоремы \ref{th:dcgd_single}. Тогда для любого $T \geq 1$ выполняется следующее неравенство:
         \begin{equation}
-            f(x^T) - f^* \leq \left(1 - 2\mu \gamma \left(\frac{k}{d} - 2 L \gamma\right)\right)^T (f(x^0) - f^*).
+            f(x^T) - f^* \leq \left(1 - \mu \gamma \left(1 - L \gamma\right) \frac{k}{d} \right)^T (f(x^0) - f^*).
         \end{equation}
     \end{theorem}
     Доказательство приведено в приложении \ref{app:dcgd_single_convergence_proof}.
 
     Наконец, получим оценку на количество итераций, необходимое для достижения заданной точности.
     \begin{corollary}\label{cor:dcgd_single_iterations}
-        Пусть выполняются условия теоремы \ref{th:dcgd_single}, значение шага выбрано $\gamma = \frac{k}{4dL}$. Тогда для достижения точности $\varepsilon > 0$ по функци требуется
+        Пусть выполняются условия теоремы \ref{th:dcgd_single}, значение шага выбрано $\gamma = \frac{1}{2L}$. Тогда для достижения точности $\varepsilon > 0$ по функции требуется
         \begin{equation}
-            T \geq \frac{4L}{\mu} \left(\frac{d}{k}\right)^2 \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right)
+            T \geq \frac{4L}{\mu} \frac{d}{k} \log \frac{f(x^0) - f^*}{\varepsilon}
         \end{equation}
         итераций.
     \end{corollary}
     Доказательство приведено в приложении \ref{app:dcgd_single_iterations_proof}.
 
-    Полученная оценка скорости сходимости является линейной, однако фактор $(\frac{d}{k})^2$ является достаточно большим.
+    Полученная оценка скорости сходимости является линейной, причем зависимость от коэффициента сжатия $d/k$ всего лишь в первой степени, что довольно неплохо.
 
 \subsection{Механизм компенсации ошибок для прореживающих операторов сжатия}
     В этом разделе речь пойдет про новый механизм компенсации ошибки для решения задач федеративного обучения \eqref{eq:problem_statement} с использованием прореживающих операторов сжатия. Имеющиеся на данный момент методы работы с ошибкой от компрессии (EF, EF21) обладают инерцией, даже если она в исходный метод не заложена. В случае Error Feedback это выражается накоплением ошибки с прошлых итераций и пересылке сжатого вектора градиента с ошибкой. В случае EF21 это проявляется в том, что вектор $g$, который известен и серверу, и устройству, также обновляется с задержкой, и при больших долях сжатия большинство компонент в нем сильно устаревшие. Предлагаемая схема SCAM (Sparsification with Compensation and Aggregation Method) лишена этих недостатков. Для простоты начнем со случая одного устройства.
 
-    \begin{algorithm}[H]
+    \begin{algorithm}[ht]
         \caption{SCAM (Одно устройство)}
         \label{alg:scam_single}
         \begin{algorithmic}
@@ -168,7 +168,7 @@
 
     Обобщим схему на случай нескольких устройств. Добавится внутренний цикл по устройствам, каждое устройство делает тот же шаг, что и в схеме \ref{alg:scam_single} для своей целевой функции $f_i$, после чего на сервере происходит усреднение всех пересланных градиентов и обновление весов модели.
 
-    \begin{algorithm}[H]
+    \begin{algorithm}[ht]
         \caption{SCAM (Несколько устройств)}
         \label{alg:scam_multi}
         \begin{algorithmic}[1]
@@ -204,7 +204,7 @@
     \begin{proposition}\label{prop:scam_single_partial_norm}
         Будем считать, что в схеме SCAM (см. алгоритм \ref{alg:scam_single}) оператор сжатия $\topk$ частично сохраняет норму градиента, то есть для любого $t \geq 0$ выполняется следующее неравенство:
         \begin{equation}
-            \|\tilde{g}^t\|_2^2 \geq \delta \|g^t\|_2^2,
+            \|\tilde{g}^t\|_2^2 \geq \delta \|\nabla f(x^t)\|_2^2,
         \end{equation}
         где $\delta > 0$~--- константа.
     \end{proposition}
@@ -219,9 +219,9 @@
 
     Наконец, сделаем оценку на количество итераций для достижения наперед заданной точности $\varepsilon > 0$.
     \begin{corollary}\label{cor:scam_single_iterations}
-        Пусть выполняются условия теоремы \ref{th:scam_single} и предположение \ref{prop:scam_single_partial_norm} о частичном сохранении нормы градиента, значение шага выбрано $\gamma = \frac{1}{L}$. Тогда для достижения точности $\varepsilon > 0$ требуется
+        Пусть выполняются условия теоремы \ref{th:scam_single_convergence}, значение шага выбрано $\gamma = \frac{1}{L}$. Тогда для достижения точности $\varepsilon > 0$ требуется
         \begin{equation}
-            T \geq \frac{L}{\mu \delta} \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right)
+            T \geq \frac{L}{\mu} \frac{1}{\delta} \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right)
         \end{equation}
         итераций.
     \end{corollary}
@@ -229,5 +229,5 @@
 
     Для оценки $\delta \approx \frac{k}{d}$, где $k$~--- количество отбираемых компонент, получаем, что для достижения точности $\varepsilon$ требуется
     \begin{equation}
-        T \simeq \frac{L d}{\mu k} \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right).
+        T \simeq \frac{L}{\mu} \frac{d}{k} \log\left(\frac{f(x^0) - f^*}{\varepsilon}\right).
     \end{equation}

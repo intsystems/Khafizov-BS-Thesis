@@ -2,10 +2,162 @@
 \addcontentsline{toc}{section}{Приложение}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 
+\section{Полезные неравенства}\label{app:useful_facts}
+    \begin{itemize}
+        \item Свойство $L$-гладкой функции:
+            \begin{equation}\label{eq:smooth_inequality}
+                f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2} \|y - x\|_2^2, \quad x, y \in \R^d.
+            \end{equation}
+        \item Неравенство Коши-Буняковского-Шварца
+            \begin{equation}\label{eq:CBS}
+                \langle x, y \rangle \leq \|x\|_2 \cdot \|y\|_2, \quad x, y \in \R^d.
+            \end{equation}
+        \item Связь между $(1 - x)^k$ и $\exp(-xk)$
+            \begin{equation}\label{eq:power_exp}
+                (1 - x)^k \leq \exp(-xk), \quad x \in [0, 1], k \in \mathbb{N}.
+            \end{equation}
+    \end{itemize}
+
 \section{Доказательство теоремы \ref{th:dcgd_single}} \label{app:dcgd_single_proof}
+    Начнем с неравенства \eqref{eq:smooth_inequality} для гладкой функции $f$:
+    \begin{equation*}
+        f(x^{t + 1}) \leq f(x^t) + \langle \nabla f(x^t), x^{t + 1} - x^t \rangle + \frac{L}{2} \|x^{t + 1} - x^t\|^2.
+    \end{equation*}
+    Поскольку мы знаем, что $x^{t + 1} = x^t - \gamma \tilde{g}^t$, то после подстановки получаем:
+    \begin{equation*}
+        f(x^{t + 1}) \leq f(x^t) - \gamma \langle \nabla f(x^t), \tilde{g}^t \rangle + \frac{L \gamma^2}{2} \|\tilde{g}^t\|^2.
+    \end{equation*}
+    Так как в качестве $\tilde{g}^t$ мы используем вектор, $k$ компонент которого равны $w_i \cdot \nabla_i f(x^t), w \in [1, 2]^d$, то
+    \begin{equation*}
+        \|\tilde{g}^t\|_2^2 = \langle \tilde{g}^t, \tilde{g}^t \rangle = \langle w \odot \nabla f(x^t), \tilde{g}^t \rangle \leq 2  \langle \nabla f(x^t), \tilde{g}^t \rangle.
+    \end{equation*}
+    Тогда оценку можно переписать:
+    \begin{align*}
+        f(x^{t + 1}) \leq& f(x^t) - \gamma \langle \nabla f(x^t), \tilde{g}^t \rangle + \frac{L \gamma^2}{2} \|\tilde{g}^t\|^2 \\
+        \leq& f(x^t) - \frac{\gamma}{2} \|\tilde{g}^t\|_2^2 + \frac{L \gamma^2}{2} \|\tilde{g}^t\|_2^2 \\
+        =& f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \|\tilde{g}^t\|_2^2.
+    \end{align*}
 \section{Доказательство леммы \ref{lem:strconv_inequality}} \label{app:strconv_inequality_proof}
+    Запишем определение $\mu$-сильной выпуклости для точек $x$ и $x^*$:
+    \begin{equation*}
+        f^* \geq f(x) + \langle \nabla f(x), x^* - x \rangle + \frac{\mu}{2} \|x^* - x\|_2^2.
+    \end{equation*}
+    Переставим слагаемые и применим неравенство Коши-Буняковского-Шварца \eqref{eq:CBS}:
+    \begin{align*}
+        f(x) - f^* \leq& \langle \nabla f(x), x - x^* \rangle - \frac{\mu}{2} \|x - x^*\|_2^2 \\
+        \leq& \|\nabla f(x)\|_2 \cdot \|x - x^*\|_2 - \frac{\mu}{2} \|x - x^*\|_2^2.
+    \end{align*}
+    Рассмотрим правую часть как функцию от $\|x - x^*\|_2$. Это парабола, достигающая максимум при $\|x - x^*\|_2^2 = \frac{\|\nabla f(x)\|_2}{\mu}$. Продолжим оценку, с учетом этого факта:
+    \begin{align*}
+        f(x) - f^* \leq& \|\nabla f(x)\|_2 \cdot \|x - x^*\|_2 - \frac{\mu}{2} \|x - x^*\|_2^2\\
+        \leq& \|\nabla f(x)\|_2 \cdot \frac{\|\nabla f(x)\|_2}{\mu} - \frac{\mu}{2} \frac{\|\nabla f(x)\|_2^2}{\mu^2}\\
+        =& \frac{1}{2\mu} \|\nabla f(x)\|_2^2.
+    \end{align*}
+    Остается лишь переписать
+    \begin{equation*}
+        \|\nabla f(x)\|_2^2 \geq 2\mu (f(x) - f^*).
+    \end{equation*}
 \section{Доказательство теоремы \ref{th:dcgd_single_convergence}} \label{app:dcgd_single_convergence_proof}
+    Начнем с оценки из теоремы \ref{th:dcgd_single}:
+    \begin{equation*}
+        f(x^{t + 1}) \leq f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \|\tilde{g}^t\|_2^2.
+    \end{equation*}
+    Оценим $\|\tilde{g}^t\|_2^2$ снизу. Для этого вспомним, какой смысл вектора $\tilde{g}^t$. Это $k$ максимальных по модулю значений среди $w_i \cdot \nabla_i f(x^t), w \in [1, 2]^d$. То есть, каждую выбранную компоненту мы не уменьшили, при этом взяли $k$ максимальных после перевзвешивания. Отсюда получаем оценку:
+    \begin{equation*}
+        \|\tilde{g}^t\|_2^2 \geq \frac{k}{d} \|\nabla f(x^t)\|_2^2.
+    \end{equation*}
+    Подставляем ее в оценку из теоремы и применим результат леммы \ref{lem:strconv_inequality}:
+    \begin{align*}
+        f(x^{t + 1}) \leq& f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \|\tilde{g}^t\|_2^2 \\
+        \leq& f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \frac{k}{d} \|\nabla f(x^t)\|_2^2 \\
+        \leq& f(x^t) - \frac{\gamma}{2} (1 - L \gamma) \frac{k}{d} \cdot 2\mu (f(x^t) - f^*).
+    \end{align*}
+    Вычтем из обеих частей $f^*$:
+    \begin{align*}
+        f(x^{t + 1}) - f^* \leq& f(x^t) - f^* - \mu \gamma (1 - L \gamma) \frac{k}{d} (f(x^t) - f^*)\\
+        \leq& \left(1 - \mu\gamma (1 - L \gamma)\frac{k}{d}\right) (f(x^t) - f^*).
+    \end{align*}
+    Теперь запустим рекурсию с итерации $T$ до 0:
+    \begin{align*}
+        f(x^T) \leq& \left(1 - \mu\gamma (1 - L \gamma)\frac{k}{d}\right) (f(x^{T - 1}) - f^*) \\
+        \leq& \ldots \\
+        \leq& \left(1 - \mu\gamma (1 - L \gamma)\frac{k}{d}\right)^T (f(x^0) - f^*).
+    \end{align*}
 \section{Доказательство следствия \ref{cor:dcgd_single_iterations}} \label{app:dcgd_single_iterations_proof}
+    Выпишем оценку из теоремы \ref{th:dcgd_single_convergence} и подставим $\gamma = \frac{1}{2L}$:
+    \begin{align*}
+        f(x^T) - f^* \leq& \left(1 - \mu \gamma \left(1 - L \gamma\right) \frac{k}{d} \right)^T (f(x^0) - f^*) \\
+        =& \left(1 - \frac{\mu}{4L} \frac{k}{d} \right)^T (f(x^0) - f^*).
+    \end{align*}
+    Применим неравенство \eqref{eq:power_exp}:
+    \begin{align*}
+        f(x^T) - f^* \leq& \left(1 - \frac{\mu}{4L} \frac{k}{d} \right)^T (f(x^0) - f^*)\\
+        \leq& \exp\left(-\frac{\mu}{4L} \frac{k}{d} T\right) (f(x^0) - f^*).
+    \end{align*}
+    Потребуем, чтобы правая часть не превосходила $\varepsilon$:
+    \begin{equation*}
+        f(x^T) - f^* \leq \exp\left(-\frac{\mu}{4L} \frac{k}{d} T\right) (f(x^0) - f^*) \leq \varepsilon.
+    \end{equation*}
+    Теперь прологарифмируем и выразим $T$:
+    \begin{equation*}
+        \left(-\frac{\mu}{4L} \frac{k}{d} T\right) \leq \log \frac{\varepsilon}{f(x^0) - f^*},
+    \end{equation*}
+    \begin{equation*}
+        T \geq \frac{4L}{\mu} \frac{d}{k} \log \frac{f(x^0) - f^*}{\varepsilon}.
+    \end{equation*}
+
 \section{Доказательство теоремы \ref{th:scam_single}} \label{app:scam_single_proof}
+    Доказательство по своей сути очень схоже с доказательством теоремы \ref{th:dcgd_single}. Пойдем по тому же пути. Снова начнем с неравенства \eqref{eq:smooth_inequality} для гладкой функции $f$:
+    \begin{equation*}
+        f(x^{t + 1}) \leq f(x^t) + \langle \nabla f(x^t), x^{t + 1} - x^t \rangle + \frac{L}{2} \|x^{t + 1} - x^t\|^2.
+    \end{equation*}
+    Подставляем формулу итерации $x^{t + 1} = x^t - \gamma \tilde{g}^t$:
+    \begin{equation*}
+        f(x^{t + 1}) \leq f(x^t) - \gamma \langle \nabla f(x^t), \tilde{g}^t \rangle + \frac{L \gamma^2}{2} \|\tilde{g}^t\|^2.
+    \end{equation*}
+    Теперь оценим скалярное произведение. Мы знаем, что $\tilde{g}^t$ получено выбором некоторых $k$ координат вектора $\nabla f(x^t)$. Тогда, зануленные координаты в $\tilde{g}^t$ попросту убьют ненулевые в $\nabla f(x^t)$. То есть, останется только $\langle \nabla f(x^t), \tilde{g}^t \rangle = \langle \tilde{g}^t, \tilde{g}^t \rangle$, так как перевзвешивания не происходит. Используем это в завершающем переходе:
+    \begin{align*}
+        f(x^{t + 1}) \leq& f(x^t) - \gamma \langle \nabla f(x^t), \tilde{g}^t \rangle + \frac{L \gamma^2}{2} \|\tilde{g}^t\|^2 \\
+        =& f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \|\tilde{g}^t\|_2^2.
+    \end{align*}
 \section{Доказательство теоремы \ref{th:scam_single_convergence}} \label{app:scam_single_convergence_proof}
+    Принимая во внимание сделанное предположение \ref{prop:scam_single_partial_norm}, а также оценку из теоремы \ref{th:scam_single}, имеем:
+    \begin{align*}
+        f(x^{t + 1}) \leq& f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \|\tilde{g}^t\|_2^2 \\
+        \leq& f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \delta \|\nabla f(x^t)\|_2^2.
+    \end{align*}
+    Теперь применим лемму \ref{lem:strconv_inequality}:
+    \begin{align*}
+        f(x^{t + 1}) \leq& f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \delta \|\nabla f(x^t)\|_2^2 \\
+        \leq& f(x^t) - \gamma \left(1 - \frac{L \gamma}{2}\right) \delta \cdot 2\mu (f(x^t) - f^*) \\
+        =& f(x^t) - \mu\gamma (2 - L \gamma) \delta (f(x^t) - f^*).
+    \end{align*}
+    Вычтем из обеих частей $f^*$:
+    \begin{equation*}
+        f(x^{t + 1}) - f^* \leq (1 - \mu\gamma (2 - L \gamma) \delta) (f(x^t) - f^*).
+    \end{equation*}
+    Остается развернуть рекурсию с итерации $T$ до 0:
+    \begin{align*}
+        f(x^T) - f^* \leq& (1 - \mu\gamma (2 - L \gamma) \delta) (f(x^{T - 1}) - f^*) \\
+        \leq& \ldots \\
+        \leq& (1 - \mu\gamma (2 - L \gamma) \delta)^T (f(x^0) - f^*).
+    \end{align*}
 \section{Доказательство следствия \ref{cor:scam_single_iterations}} \label{app:scam_single_iterations_proof}
+    Начнем с оценки из теоремы \ref{th:scam_single_convergence}, подставим шаг $\gamma = \frac{1}{L}$:
+    \begin{align*}
+        f(x^T) - f^* \leq& (1 - \mu\gamma (2 - L \gamma) \delta)^T (f(x^0) - f^*) \\
+        =& \left(1 - \frac{\mu}{L} \delta \right)^T (f(x^0) - f^*)
+    \end{align*}
+    Применим неравенство \eqref{eq:power_exp}:
+    \begin{align*}
+        f(x^T) - f^* \leq& \left(1 - \frac{\mu}{L} \delta \right)^T (f(x^0) - f^*) \\
+        \leq& \exp\left(-\frac{\mu}{L} \delta T\right) (f(x^0) - f^*).
+    \end{align*}
+    Потребуем, чтобы правая часть не превосходила $\varepsilon$:
+    \begin{equation*}
+        f(x^T) - f^* \leq \exp\left(-\frac{\mu}{L} \delta T\right) (f(x^0) - f^*) \leq \varepsilon.
+    \end{equation*}
+    Выразим $T$:
+    \begin{equation*}
+        T \geq \frac{\mu}{L} \frac{1}{\delta} \log \frac{f(x^0) - f^*}{\varepsilon}.
+    \end{equation*}

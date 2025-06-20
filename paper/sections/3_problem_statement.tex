@@ -35,18 +35,4 @@
 
     Для уменьшения затрат на коммуникацию при пересылке градиентов используются операторы сжатия. Приведем определения двух классов операторов, которые будут использоваться в данной работе.
 
-    \begin{definition}
-        Пусть $\zeta \geq 1$. Мы говорим, что $\mathcal{C} \in \mathcal{U}(\zeta)$, если $\mathcal{C}$ является несмещённым (то есть $\mathbb{E}[\mathcal{C}(x)] = x$ для всех $x$) и если его второй момент ограничен следующим образом:
-        \begin{equation}
-            \mathbb{E}\left[\|\mathcal{C}(x)\|_2^2\right] \leq \zeta \|x\|_2^2, \quad \forall x \in \R^d.
-        \end{equation}
-    \end{definition}
-
-    \begin{definition}
-        Пусть $\delta > 0$. Мы говорим, что $\mathcal{C} \in \mathcal{B}(\delta)$, если выполняется следующее условие:
-        \begin{equation}
-            \mathbb{E}\left[\|\mathcal{C}(x) - x\|_2^2\right] \leq \left(1 - \frac{1}{\delta}\right) \|x\|_2^2, \quad \forall x \in \R^d.
-        \end{equation}
-    \end{definition}
-
     
